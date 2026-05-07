@@ -1,156 +1,128 @@
 <?php
 require '../config/db.php';
+requireRole('teacher');
 
-if (!isLoggedIn() || !hasRole('teacher')) {
-    redirect('../login.php');
-}
-
+$teacher_id = $_SESSION['user_id'];
 $course_id = $_GET['course_id'] ?? null;
 $slot_id = $_GET['slot_id'] ?? null;
 $date = $_GET['date'] ?? date('Y-m-d');
 
+// If no course/slot, show selection
 if (!$course_id || !$slot_id) {
-    die("Course and Slot are required.");
+    $classes = $pdo->prepare("SELECT c.id as course_id, c.name, s.id as slot_id, s.time_range FROM course_teachers ct JOIN courses c ON ct.course_id=c.id JOIN slots s ON ct.slot_id=s.id WHERE ct.teacher_id=?");
+    $classes->execute([$teacher_id]);
+    $classList = $classes->fetchAll();
+    
+    include '../includes/dashboard_header.php';
+    echo '<div class="card"><div class="card-header"><h3><i class="fas fa-calendar-check" style="margin-right:8px;color:var(--royal)"></i> Select Class for Attendance</h3></div>';
+    echo '<div class="grid-2">';
+    foreach ($classList as $cl) {
+        echo '<a href="attendance.php?course_id='.$cl['course_id'].'&slot_id='.$cl['slot_id'].'" class="course-card" style="cursor:pointer">';
+        echo '<div class="course-icon"><i class="fas fa-book-open"></i></div>';
+        echo '<div><h4>'.e($cl['name']).'</h4><p>'.e($cl['time_range']).'</p></div></a>';
+    }
+    if (empty($classList)) echo '<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-folder-open"></i><p>No classes assigned.</p></div>';
+    echo '</div></div>';
+    include '../includes/dashboard_footer.php';
+    exit;
 }
 
 $message = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!verifyCsrfToken($_POST['csrf_token'])) {
-        $message = "Invalid CSRF token.";
-    } elseif (isset($_POST['attendance'])) {
-        $attendanceData = $_POST['attendance'];
-        
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+    if (isset($_POST['attendance'])) {
         try {
             $pdo->beginTransaction();
-            
-            foreach ($attendanceData as $student_id => $status) {
-                // Check if already marked for this date
-                $checkStmt = $pdo->prepare("SELECT id FROM attendance WHERE student_id = ? AND date = ?");
-                $checkStmt->execute([$student_id, $date]);
-                $exists = $checkStmt->fetch();
+            foreach ($_POST['attendance'] as $student_id => $status) {
+                $student_id = (int)$student_id;
+                $status = in_array($status, ['present','absent','leave']) ? $status : 'present';
+                
+                $check = $pdo->prepare("SELECT id FROM attendance WHERE student_id=? AND date=? AND course_id=?");
+                $check->execute([$student_id, $date, $course_id]);
+                $exists = $check->fetch();
                 
                 if ($exists) {
-                    $updStmt = $pdo->prepare("UPDATE attendance SET status = ? WHERE id = ?");
-                    $updStmt->execute([$status, $exists['id']]);
+                    $pdo->prepare("UPDATE attendance SET status=? WHERE id=?")->execute([$status, $exists['id']]);
                 } else {
-                    $insStmt = $pdo->prepare("INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)");
-                    $insStmt->execute([$student_id, $date, $status]);
+                    $pdo->prepare("INSERT INTO attendance (student_id, course_id, slot_id, date, status, marked_by) VALUES (?,?,?,?,?,?)")
+                        ->execute([$student_id, $course_id, $slot_id, $date, $status, $teacher_id]);
                 }
                 
-                // If absent, check total absences this month
                 if ($status === 'absent') {
                     $monthStart = date('Y-m-01', strtotime($date));
                     $monthEnd = date('Y-m-t', strtotime($date));
-                    
-                    $absStmt = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE student_id = ? AND status = 'absent' AND date BETWEEN ? AND ?");
-                    $absStmt->execute([$student_id, $monthStart, $monthEnd]);
-                    $absentCount = $absStmt->fetchColumn();
-                    
-                    if ($absentCount >= 3) {
-                        // Mark student as struck_off
-                        $strkStmt = $pdo->prepare("UPDATE students SET status = 'struck_off' WHERE id = ?");
-                        $strkStmt->execute([$student_id]);
+                    $absCount = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE student_id=? AND status='absent' AND date BETWEEN ? AND ?");
+                    $absCount->execute([$student_id, $monthStart, $monthEnd]);
+                    if ($absCount->fetchColumn() >= 3) {
+                        $pdo->prepare("UPDATE students SET status='struck_off', struck_off_date=CURDATE(), struck_off_reason='3+ absences in ".date('F Y',strtotime($date))."' WHERE id=? AND status='active'")->execute([$student_id]);
                     }
                 }
             }
-            
             $pdo->commit();
-            $message = "Attendance saved successfully.";
+            setFlash('success', 'Attendance saved successfully.');
         } catch (Exception $e) {
             $pdo->rollBack();
-            $message = "Failed to save attendance: " . $e->getMessage();
+            setFlash('danger', 'Error saving attendance.');
         }
+        redirect("attendance.php?course_id=$course_id&slot_id=$slot_id&date=$date");
     }
 }
 
-// Fetch students for this course and slot
-$stmt = $pdo->prepare("SELECT s.id, s.name, s.status, s.contact FROM students s 
-                       JOIN enrollments e ON s.id = e.student_id 
-                       WHERE e.course_id = ? AND e.slot_id = ?");
-$stmt->execute([$course_id, $slot_id]);
-$students = $stmt->fetchAll();
+$students = $pdo->prepare("SELECT s.id, s.name, s.status, s.contact FROM students s JOIN enrollments e ON s.id=e.student_id WHERE e.course_id=? AND e.slot_id=?");
+$students->execute([$course_id, $slot_id]);
+$students = $students->fetchAll();
 
-// Fetch already marked attendance for today
-$attStmt = $pdo->prepare("SELECT student_id, status FROM attendance WHERE date = ?");
-$attStmt->execute([$date]);
-$markedAttendanceRaw = $attStmt->fetchAll();
-$markedAttendance = [];
-foreach ($markedAttendanceRaw as $ma) {
-    $markedAttendance[$ma['student_id']] = $ma['status'];
-}
+$marked = [];
+$mStmt = $pdo->prepare("SELECT student_id, status FROM attendance WHERE date=? AND course_id=?");
+$mStmt->execute([$date, $course_id]);
+foreach ($mStmt->fetchAll() as $m) $marked[$m['student_id']] = $m['status'];
 
+$courseName = $pdo->prepare("SELECT name FROM courses WHERE id=?"); $courseName->execute([$course_id]); $courseName = $courseName->fetchColumn();
 ?>
 <?php include '../includes/dashboard_header.php'; ?>
 
-<div class="card" style="margin-bottom: 20px;">
-    <h3>Mark Attendance</h3>
-    <p style="color: var(--light-text); margin-bottom: 20px;">Rule: If a student is absent 3 times in a month, they will be automatically struck off.</p>
-
-    <?php if ($message): ?>
-        <div class="alert alert-success mt-2"><?php echo htmlspecialchars($message); ?></div>
-    <?php endif; ?>
-    
-    <form method="GET" action="" style="display: flex; gap: 15px; align-items: end; margin-bottom: 20px;">
-        <input type="hidden" name="course_id" value="<?php echo htmlspecialchars($course_id); ?>">
-        <input type="hidden" name="slot_id" value="<?php echo htmlspecialchars($slot_id); ?>">
-        
-        <div class="form-group" style="margin-bottom: 0;">
-            <label>Date</label>
-            <input type="date" name="date" class="form-control" value="<?php echo htmlspecialchars($date); ?>" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="height: 46px;">Load Students</button>
+<div class="card mb-3">
+    <div class="card-header">
+        <h3><i class="fas fa-calendar-check" style="margin-right:8px;color:var(--royal)"></i> <?php echo e($courseName); ?> — Attendance</h3>
+        <a href="index.php" class="btn btn-sm btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+    <p style="color:var(--gray-500);font-size:13px;margin-bottom:16px"><i class="fas fa-info-circle"></i> Rule: 3+ absences in a month → automatic struck off</p>
+    <form method="GET" style="display:flex;gap:12px;align-items:flex-end">
+        <input type="hidden" name="course_id" value="<?php echo e($course_id); ?>">
+        <input type="hidden" name="slot_id" value="<?php echo e($slot_id); ?>">
+        <div class="form-group" style="margin-bottom:0"><label>Date</label><input type="date" name="date" class="form-control" value="<?php echo e($date); ?>"></div>
+        <button class="btn btn-primary" style="height:44px"><i class="fas fa-sync"></i> Load</button>
     </form>
 </div>
 
 <div class="card">
-    <form method="POST" action="">
+    <form method="POST">
         <?php csrfField(); ?>
         <div class="table-responsive">
             <table>
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Contact</th>
-                        <th>Current Status</th>
-                        <th>Attendance</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Student</th><th>Contact</th><th>Status</th><th>Attendance</th></tr></thead>
                 <tbody>
-                    <?php foreach ($students as $student): ?>
-                        <tr>
-                            <td><strong><?php echo htmlspecialchars($student['name']); ?></strong></td>
-                            <td><?php echo htmlspecialchars($student['contact']); ?></td>
-                            <td>
-                                <?php if ($student['status'] === 'active'): ?>
-                                    <span class="badge badge-success">Active</span>
-                                <?php else: ?>
-                                    <span class="badge badge-danger">Struck Off</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php $currentStatus = $markedAttendance[$student['id']] ?? 'present'; ?>
-                                <select name="attendance[<?php echo $student['id']; ?>]" class="form-control" style="width: auto;" <?php echo $student['status'] === 'struck_off' ? 'disabled' : ''; ?>>
-                                    <option value="present" <?php echo $currentStatus === 'present' ? 'selected' : ''; ?>>Present</option>
-                                    <option value="absent" <?php echo $currentStatus === 'absent' ? 'selected' : ''; ?>>Absent</option>
-                                    <option value="leave" <?php echo $currentStatus === 'leave' ? 'selected' : ''; ?>>Leave</option>
-                                </select>
-                                <?php if ($student['status'] === 'struck_off'): ?>
-                                    <small style="color: red; margin-left: 10px;">Requires Re-Admission</small>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    <?php if (empty($students)): ?>
-                        <tr><td colspan="4" class="text-center">No students found.</td></tr>
-                    <?php endif; ?>
+                <?php foreach ($students as $s): ?>
+                <tr>
+                    <td><strong><?php echo e($s['name']); ?></strong></td>
+                    <td style="font-size:13px;color:var(--gray-500)"><?php echo e($s['contact']); ?></td>
+                    <td><span class="badge <?php echo $s['status']==='active'?'badge-success':'badge-danger'; ?>"><?php echo $s['status']==='active'?'Active':'Struck Off'; ?></span></td>
+                    <td>
+                        <?php $cur = $marked[$s['id']] ?? 'present'; ?>
+                        <select name="attendance[<?php echo $s['id']; ?>]" class="form-control" style="width:auto;min-width:120px" <?php echo $s['status']==='struck_off'?'disabled':''; ?>>
+                            <option value="present" <?php echo $cur==='present'?'selected':''; ?>>✅ Present</option>
+                            <option value="absent" <?php echo $cur==='absent'?'selected':''; ?>>❌ Absent</option>
+                            <option value="leave" <?php echo $cur==='leave'?'selected':''; ?>>📋 Leave</option>
+                        </select>
+                        <?php if($s['status']==='struck_off'): ?><small style="color:var(--red);margin-left:8px">Needs re-admission</small><?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php if(empty($students)): ?><tr><td colspan="4" class="text-center" style="padding:40px;color:var(--gray-500)">No students enrolled.</td></tr><?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <?php if (!empty($students)): ?>
-            <div class="mt-2 text-right" style="text-align: right;">
-                <button type="submit" class="btn btn-primary" style="padding: 10px 30px;">Save Attendance</button>
-            </div>
+        <?php if(!empty($students)): ?>
+        <div style="text-align:right;margin-top:20px"><button class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Save Attendance</button></div>
         <?php endif; ?>
     </form>
 </div>
