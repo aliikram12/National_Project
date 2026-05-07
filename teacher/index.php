@@ -1,98 +1,50 @@
 <?php
 require '../config/db.php';
-
-if (!isLoggedIn() || !hasRole('teacher')) {
-    redirect('../login.php');
-}
+requireRole('teacher');
 
 $teacher_id = $_SESSION['user_id'];
-
-// Get courses assigned to this teacher
 $stmt = $pdo->prepare("SELECT c.name as course_name, c.id as course_id, s.time_range, s.id as slot_id,
-                       (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.id AND e.slot_id = s.id) as student_count
-                       FROM course_teachers ct 
-                       JOIN courses c ON ct.course_id = c.id 
-                       JOIN slots s ON ct.slot_id = s.id 
-                       WHERE ct.teacher_id = ?");
+                       (SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id AND e.slot_id=s.id) as student_count
+                       FROM course_teachers ct JOIN courses c ON ct.course_id=c.id JOIN slots s ON ct.slot_id=s.id WHERE ct.teacher_id=?");
 $stmt->execute([$teacher_id]);
-$assigned_courses = $stmt->fetchAll();
-
-// Calculate total students handled by teacher
-$totalStudents = 0;
-foreach($assigned_courses as $ac) {
-    $totalStudents += $ac['student_count'];
-}
-
+$classes = $stmt->fetchAll();
+$totalStudents = array_sum(array_column($classes, 'student_count'));
 ?>
 <?php include '../includes/dashboard_header.php'; ?>
 
 <div class="stats-grid">
     <div class="stat-card info">
-        <div class="icon"><i class="fas fa-chalkboard"></i></div>
-        <div class="info">
-            <h3 style="color: var(--accent-color);"><?php echo count($assigned_courses); ?></h3>
-            <p>Assigned Classes</p>
-        </div>
+        <div class="stat-icon"><i class="fas fa-chalkboard"></i></div>
+        <div class="stat-info"><h3><?php echo count($classes); ?></h3><p>Assigned Classes</p></div>
     </div>
-    <div class="stat-card">
-        <div class="icon"><i class="fas fa-user-graduate"></i></div>
-        <div class="info">
-            <h3 style="color: var(--primary-color);"><?php echo $totalStudents; ?></h3>
-            <p>Total Students</p>
-        </div>
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+        <div class="stat-info"><h3><?php echo $totalStudents; ?></h3><p>Total Students</p></div>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-bottom: 20px; font-size: 18px; color: var(--primary-color);"><i class="fas fa-list-ul" style="margin-right: 10px;"></i> My Class Schedule & Management</h3>
+    <div class="card-header"><h3><i class="fas fa-list" style="margin-right:8px;color:var(--royal)"></i> My Class Schedule</h3></div>
     <div class="table-responsive">
         <table>
-            <thead>
-                <tr>
-                    <th>Course Name</th>
-                    <th>Time Slot</th>
-                    <th>Enrolled Students</th>
-                    <th>Quick Actions</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Course</th><th>Time Slot</th><th>Students</th><th>Actions</th></tr></thead>
             <tbody>
-                <?php foreach ($assigned_courses as $ac): ?>
-                    <tr>
-                        <td>
-                            <div style="font-weight: 600; color: var(--text-color); font-size: 15px;">
-                                <?php echo htmlspecialchars($ac['course_name']); ?>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge badge-info" style="font-size: 13px; padding: 8px 12px;">
-                                <i class="far fa-clock"></i> <?php echo htmlspecialchars($ac['time_range']); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <span style="font-weight: 600; color: var(--light-text); font-size: 16px;">
-                                <?php echo $ac['student_count']; ?> Students
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 10px;">
-                                <a href="attendance.php?course_id=<?php echo $ac['course_id']; ?>&slot_id=<?php echo $ac['slot_id']; ?>" class="btn btn-primary" style="padding: 8px 15px; font-size: 13px; box-shadow: none;">
-                                    <i class="fas fa-check-square"></i> Mark Attendance
-                                </a>
-                                <a href="assessments.php?course_id=<?php echo $ac['course_id']; ?>&slot_id=<?php echo $ac['slot_id']; ?>" class="btn btn-accent" style="padding: 8px 15px; font-size: 13px; box-shadow: none;">
-                                    <i class="fas fa-star"></i> Assessment
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php if (empty($assigned_courses)): ?>
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px;">
-                            <i class="fas fa-folder-open" style="font-size: 48px; color: #E2E8F0; margin-bottom: 15px; display: block;"></i>
-                            <div style="color: var(--light-text); font-size: 16px;">No courses assigned yet. Please contact the administrator.</div>
-                        </td>
-                    </tr>
-                <?php endif; ?>
+            <?php foreach ($classes as $c): ?>
+            <tr>
+                <td><strong style="font-size:15px"><?php echo e($c['course_name']); ?></strong></td>
+                <td><span class="badge badge-info" style="font-size:13px;padding:8px 14px"><i class="far fa-clock"></i> <?php echo e($c['time_range']); ?></span></td>
+                <td><span style="font-weight:700;font-size:16px;color:var(--gray-700)"><?php echo $c['student_count']; ?></span></td>
+                <td>
+                    <div style="display:flex;gap:8px">
+                        <a href="attendance.php?course_id=<?php echo $c['course_id']; ?>&slot_id=<?php echo $c['slot_id']; ?>" class="btn btn-sm btn-primary"><i class="fas fa-check-square"></i> Attendance</a>
+                        <a href="assessments.php?course_id=<?php echo $c['course_id']; ?>&slot_id=<?php echo $c['slot_id']; ?>" class="btn btn-sm" style="background:var(--cyan);color:#fff"><i class="fas fa-star"></i> Assessment</a>
+                    </div>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            <?php if (empty($classes)): ?>
+            <tr><td colspan="4"><div class="empty-state"><i class="fas fa-folder-open"></i><p>No courses assigned. Contact the administrator.</p></div></td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>
