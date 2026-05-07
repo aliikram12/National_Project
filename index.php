@@ -1,51 +1,151 @@
-<?php include 'includes/header.php'; ?>
+<?php
+require 'config/db.php';
 
-<section class="hero">
-    <div class="container">
-        <h1>Welcome to National College</h1>
-        <p>A premier institution for excellence in education. Experience our modern, fully automated learning and admission management system designed for a seamless educational journey.</p>
-        <a href="login.php" class="btn btn-accent" style="font-size: 1.2rem; padding: 15px 30px;">Access Portal</a>
+if (isLoggedIn()) {
+    redirect($_SESSION['user_role'] . '/index.php');
+}
+
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'])) {
+        $error = "Invalid CSRF token.";
+    } else {
+        $email = trim($_POST['email']);
+        $password = $_POST['password'];
+        $role = $_POST['role'];
+
+        // Validate user with specific role
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = ?");
+        $stmt->execute([$email, $role]);
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_role'] = $user['role'];
+            
+            redirect($user['role'] . '/index.php');
+        } else {
+            $error = "Invalid email, password, or role selected.";
+        }
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National College | Login Portal</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--primary-color), #0d3660);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header i {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        .login-header h2 {
+            font-size: 28px;
+            color: var(--primary-color);
+        }
+        .login-header p {
+            color: var(--light-text);
+        }
+        
+        /* Demo credentials section */
+        .demo-credentials {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 30px;
+            font-size: 13px;
+        }
+        .demo-credentials h4 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-size: 15px;
+        }
+        .demo-credentials ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .demo-credentials li {
+            margin-bottom: 5px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="login-header">
+        <i class="fas fa-graduation-cap"></i>
+        <h2>National College</h2>
+        <p>Centralized Login Portal</p>
     </div>
-</section>
+    
+    <?php if ($error): ?>
+        <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+    <?php endif; ?>
 
-<section id="about" class="py-5" style="background: var(--white);">
-    <div class="container">
-        <h2 class="text-center mb-2" style="font-size: 36px;">About Us</h2>
-        <p class="text-center" style="max-width: 800px; margin: 0 auto; color: var(--light-text); font-size: 18px;">
-            National College provides world-class education with a focus on innovation and leadership. Our state-of-the-art campus and modern LMS ensure that our students get the best learning experience possible.
-        </p>
-    </div>
-</section>
-
-<section id="courses" class="py-5">
-    <div class="container">
-        <h2 class="text-center mb-2" style="font-size: 36px;">Our Top Courses</h2>
-        <div class="stats-grid mt-2">
-            <div class="card text-center">
-                <i class="fas fa-laptop-code fa-3x" style="color: var(--primary-color); margin-bottom: 15px;"></i>
-                <h3>Computer Science</h3>
-                <p style="color: var(--light-text); margin-top: 10px;">Master programming, data structures, AI, and more.</p>
-            </div>
-            <div class="card text-center">
-                <i class="fas fa-chart-line fa-3x" style="color: var(--primary-color); margin-bottom: 15px;"></i>
-                <h3>Business Administration</h3>
-                <p style="color: var(--light-text); margin-top: 10px;">Learn management, finance, and entrepreneurship.</p>
-            </div>
-            <div class="card text-center">
-                <i class="fas fa-paint-brush fa-3x" style="color: var(--primary-color); margin-bottom: 15px;"></i>
-                <h3>Graphic Design</h3>
-                <p style="color: var(--light-text); margin-top: 10px;">Create stunning visuals with industry-standard tools.</p>
-            </div>
+    <form method="POST" action="">
+        <?php csrfField(); ?>
+        
+        <div class="form-group">
+            <label for="role">Select Portal Role</label>
+            <select name="role" id="role" class="form-control" required>
+                <option value="admin">Administrator Panel</option>
+                <option value="teacher">Teacher Panel</option>
+                <option value="receptionist">Receptionist Panel</option>
+            </select>
         </div>
-    </div>
-</section>
 
-<section class="py-5" style="background: var(--primary-color); color: var(--white);">
-    <div class="container text-center">
-        <h2 style="color: var(--white); margin-bottom: 20px;">Ready to start your journey?</h2>
-        <p style="margin-bottom: 30px; font-size: 18px; color: rgba(255,255,255,0.8);">Join thousands of students building their future at National College.</p>
-        <a href="login.php" class="btn btn-accent">Apply Now (Receptionist Login)</a>
-    </div>
-</section>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" name="email" id="email" class="form-control" required placeholder="Enter your email">
+        </div>
 
-<?php include 'includes/footer.php'; ?>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" class="form-control" required placeholder="Enter your password">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 16px; padding: 12px;">Login to Portal</button>
+    </form>
+
+    <div class="demo-credentials">
+        <h4>Demo Login Credentials</h4>
+        <ul>
+            <li><strong>Admin:</strong> admin@national.edu / admin123</li>
+            <li><strong>Teacher:</strong> teacher@national.edu / teacher123</li>
+            <li><strong>Receptionist:</strong> reception@national.edu / reception123</li>
+        </ul>
+        <p style="margin-top: 10px; color: #888;">Dummy data (students, courses, slots) is already loaded for testing.</p>
+    </div>
+</div>
+
+</body>
+</html>
