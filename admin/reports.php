@@ -15,6 +15,7 @@ $courseId = $_GET['course_id'] ?? '';
 $slotId = $_GET['slot_id'] ?? '';
 $teacherId = $_GET['teacher_id'] ?? '';
 $status = $_GET['status'] ?? '';
+$studentName = $_GET['student_name'] ?? '';
 
 // Build Query based on Report Type
 $params = [];
@@ -33,6 +34,7 @@ if ($reportType === 'admissions') {
     if ($courseId) { $query .= " AND e.course_id = ?"; $params[] = $courseId; }
     if ($slotId) { $query .= " AND e.slot_id = ?"; $params[] = $slotId; }
     if ($status) { $query .= " AND s.status = ?"; $params[] = $status; }
+    if ($studentName) { $query .= " AND s.name LIKE ?"; $params[] = "%$studentName%"; }
     
     $query .= " ORDER BY e.enrollment_date DESC";
     
@@ -51,6 +53,7 @@ if ($reportType === 'admissions') {
     if ($slotId) { $query .= " AND a.slot_id = ?"; $params[] = $slotId; }
     if ($teacherId) { $query .= " AND a.marked_by = ?"; $params[] = $teacherId; }
     if ($status) { $query .= " AND a.status = ?"; $params[] = $status; }
+    if ($studentName) { $query .= " AND s.name LIKE ?"; $params[] = "%$studentName%"; }
     
     $query .= " ORDER BY a.date DESC, s.name ASC";
 
@@ -66,8 +69,24 @@ if ($reportType === 'admissions') {
     
     if ($courseId) { $query .= " AND a.course_id = ?"; $params[] = $courseId; }
     if ($teacherId) { $query .= " AND a.teacher_id = ?"; $params[] = $teacherId; }
+    if ($studentName) { $query .= " AND s.name LIKE ?"; $params[] = "%$studentName%"; }
     
     $query .= " ORDER BY a.date DESC";
+
+} elseif ($reportType === 'courses') {
+    $query = "SELECT c.code as course_code, c.name as course_name, c.fee, c.duration_months, d.name as department, COUNT(ct.teacher_id) as total_teachers
+              FROM courses c
+              LEFT JOIN departments d ON c.department_id = d.id
+              LEFT JOIN course_teachers ct ON c.id = ct.course_id
+              GROUP BY c.id
+              ORDER BY c.name ASC";
+
+} elseif ($reportType === 'slots') {
+    $query = "SELECT s.time_range as slot_time, COUNT(e.id) as total_enrollments
+              FROM slots s
+              LEFT JOIN enrollments e ON s.id = e.slot_id
+              GROUP BY s.id
+              ORDER BY s.time_range ASC";
 }
 
 $stmt = $pdo->prepare($query);
@@ -106,10 +125,12 @@ if (isset($_GET['export']) && !empty($results)) {
         $title = ucfirst($reportType) . " Report";
         $pdf->Cell(0, 10, $title, 0, 1, 'C');
         
-        $pdf->SetFont('helvetica', '', 10);
-        $pdf->Cell(0, 8, "Period: " . formatDate($dateFrom) . " to " . formatDate($dateTo), 0, 1, 'C');
+        if (!in_array($reportType, ['courses', 'slots'])) {
+            $pdf->SetFont('helvetica', '', 10);
+            $pdf->Cell(0, 8, "Period: " . formatDate($dateFrom) . " to " . formatDate($dateTo), 0, 1, 'C');
+        }
         
-        if ($courseId || $slotId || $teacherId || $status) {
+        if ($courseId || $slotId || $teacherId || $status || $studentName) {
             $filters = [];
             if ($courseId) {
                 $cname = $pdo->prepare("SELECT name FROM courses WHERE id=?"); $cname->execute([$courseId]);
@@ -124,6 +145,7 @@ if (isset($_GET['export']) && !empty($results)) {
                 $filters[] = "Teacher: " . $tname->fetchColumn();
             }
             if ($status) $filters[] = "Status: " . ucfirst($status);
+            if ($studentName) $filters[] = "Student: " . $studentName;
             
             $pdf->SetFont('helvetica', 'I', 9);
             $pdf->Cell(0, 6, "Filters applied: " . implode(" | ", $filters), 0, 1, 'C');
@@ -141,6 +163,10 @@ if (isset($_GET['export']) && !empty($results)) {
             $widths = ['#' => '5%', 'Name' => '15%', 'Father Name' => '15%', 'Contact' => '13%', 'Course' => '15%', 'Slot' => '12%', 'Enrollment Date' => '15%', 'Status' => '10%'];
         } elseif ($reportType === 'assessments') {
             $widths = ['#' => '5%', 'Student' => '15%', 'Teacher' => '15%', 'Course' => '15%', 'Date' => '10%', 'Assessment Type' => '10%', 'Grade' => '5%', 'Notes' => '25%'];
+        } elseif ($reportType === 'courses') {
+            $widths = ['#' => '5%', 'Course Code' => '15%', 'Course Name' => '35%', 'Fee' => '15%', 'Duration Months' => '15%', 'Department' => '15%'];
+        } elseif ($reportType === 'slots') {
+            $widths = ['#' => '10%', 'Slot Time' => '45%', 'Total Enrollments' => '45%'];
         } else {
             $widths = ['#' => '5%']; // Default 5% for Sr no.
         }
@@ -219,8 +245,11 @@ if (isset($_GET['export']) && !empty($results)) {
                     <option value="admissions" <?php echo $reportType==='admissions'?'selected':''; ?>>Admissions Report</option>
                     <option value="attendance" <?php echo $reportType==='attendance'?'selected':''; ?>>Attendance Report</option>
                     <option value="assessments" <?php echo $reportType==='assessments'?'selected':''; ?>>Assessments Report</option>
+                    <option value="courses" <?php echo $reportType==='courses'?'selected':''; ?>>Courses Report</option>
+                    <option value="slots" <?php echo $reportType==='slots'?'selected':''; ?>>Slots Report</option>
                 </select>
             </div>
+            <?php if (!in_array($reportType, ['courses', 'slots'])): ?>
             <div class="form-group" style="margin-bottom:0">
                 <label>Date From</label>
                 <input type="date" name="date_from" class="form-control" value="<?php echo e($dateFrom); ?>">
@@ -236,8 +265,13 @@ if (isset($_GET['export']) && !empty($results)) {
                     <?php foreach($courses as $c): ?><option value="<?php echo $c['id']; ?>" <?php echo $courseId==$c['id']?'selected':''; ?>><?php echo e($c['name']); ?></option><?php endforeach; ?>
                 </select>
             </div>
+            <div class="form-group" style="margin-bottom:0">
+                <label>Student Name</label>
+                <input type="text" name="student_name" class="form-control" placeholder="Search student..." value="<?php echo e($studentName); ?>">
+            </div>
+            <?php endif; ?>
             
-            <?php if ($reportType !== 'assessments'): ?>
+            <?php if (!in_array($reportType, ['courses', 'slots', 'assessments'])): ?>
             <div class="form-group" style="margin-bottom:0">
                 <label>Slot</label>
                 <select name="slot_id" class="form-control">
@@ -247,7 +281,7 @@ if (isset($_GET['export']) && !empty($results)) {
             </div>
             <?php endif; ?>
             
-            <?php if ($reportType !== 'admissions'): ?>
+            <?php if (!in_array($reportType, ['courses', 'slots', 'admissions'])): ?>
             <div class="form-group" style="margin-bottom:0">
                 <label>Teacher</label>
                 <select name="teacher_id" class="form-control">
