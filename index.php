@@ -147,15 +147,30 @@ try {
                 <a href="javascript:void(0)" onclick="openLoginModal()" class="btn-hero-primary"><i class="fas fa-rocket"></i> Get Started</a>
                 <a href="#features" class="btn-hero-outline"><i class="fas fa-play-circle"></i> Learn More</a>
             </div>
-            <div class="hero-stats">
-                <div class="hero-stat"><h3><?php echo $totalStudents ?: '500'; ?>+</h3><p>Students Enrolled</p></div>
-                <div class="hero-stat"><h3><?php echo $totalCourses ?: '12'; ?>+</h3><p>Active Courses</p></div>
-                <div class="hero-stat"><h3><?php echo $totalTeachers ?: '20'; ?>+</h3><p>Expert Teachers</p></div>
-            </div>
         </div>
         <div class="hero-visual">
             <div class="hero-graphic">
                 <i class="fas fa-graduation-cap"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== STATS SECTION ===== -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>15+</h3>
+                <p>Students Enrolled</p>
+            </div>
+            <div class="stat-card">
+                <h3>35+</h3>
+                <p>Active Courses</p>
+            </div>
+            <div class="stat-card">
+                <h3>6+</h3>
+                <p>Expert Teachers</p>
             </div>
         </div>
     </div>
@@ -317,10 +332,11 @@ try {
             </div>
             <div class="footer-col">
                 <h4>Courses</h4>
-                <ul style="display:grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                    <?php foreach($allCourses as $c): ?>
-                    <li><a href="#courses"><?php echo e($c['name']); ?></a></li>
-                    <?php endforeach; ?>
+                <ul>
+                    <li><a href="#courses">IT Courses</a></li>
+                    <li><a href="#courses">Regular E-Commerce Courses</a></li>
+                    <li><a href="#courses">Regular Civil Courses</a></li>
+                    <li><a href="#courses">Competency Based Diplomas</a></li>
                 </ul>
             </div>
             <div class="footer-col">

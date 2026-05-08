@@ -6,17 +6,6 @@
 CREATE DATABASE IF NOT EXISTS national_college CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE national_college;
 
--- Drop existing tables in reverse dependency order
-DROP TABLE IF EXISTS notifications;
-DROP TABLE IF EXISTS assessments;
-DROP TABLE IF EXISTS attendance;
-DROP TABLE IF EXISTS course_teachers;
-DROP TABLE IF EXISTS enrollments;
-DROP TABLE IF EXISTS students;
-DROP TABLE IF EXISTS slots;
-DROP TABLE IF EXISTS courses;
-DROP TABLE IF EXISTS pdf_templates;
-DROP TABLE IF EXISTS users;
 
 -- ============================================
 -- 1. USERS TABLE
