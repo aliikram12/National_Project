@@ -26,16 +26,35 @@ CREATE TABLE users (
 ) ENGINE=InnoDB;
 
 -- ============================================
+-- 1b. DEPARTMENTS TABLE
+-- ============================================
+CREATE TABLE departments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NULL,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_status (status)
+) ENGINE=InnoDB;
+
+-- ============================================
 -- 2. COURSES TABLE
 -- ============================================
 CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
+    fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     duration VARCHAR(50) NOT NULL,
+    duration_months INT DEFAULT 1,
+    department_id INT NULL,
     description TEXT,
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL,
+    INDEX idx_department (department_id),
     INDEX idx_status (status)
 ) ENGINE=InnoDB;
 

@@ -119,20 +119,23 @@ if (isset($_GET['export']) && !empty($results)) {
         $pdf->AddPage();
         $settings = $pdf->getSettings();
         
-        // Report Title
+        // Premium Report Title Box
+        $pdf->Ln(6); // Space from header line
         $pdf->SetFont('helvetica', 'B', 16);
-        $pdf->SetTextColor(0,0,0);
-        $title = ucfirst($reportType) . " Report";
-        $pdf->Cell(0, 10, $title, 0, 1, 'C');
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFillColor(10, 25, 47); // Deep navy blue background
+        $title = strtoupper($reportType) . " REPORT";
+        $pdf->Cell(0, 10, '  ' . $title, 0, 1, 'L', true);
         
-        // Generated Date
+        // Report Metadata (Date and Period)
         $pdf->SetFont('helvetica', '', 10);
-        $pdf->Cell(0, 6, "Generated Date: " . date('d-M-Y h:i A'), 0, 1, 'C');
+        $pdf->SetTextColor(50, 50, 50);
         
+        $infoText = "Generated On: " . date('d-M-Y h:i A');
         if (!in_array($reportType, ['courses', 'slots'])) {
-            $pdf->SetFont('helvetica', '', 10);
-            $pdf->Cell(0, 6, "Period: " . formatDate($dateFrom) . " to " . formatDate($dateTo), 0, 1, 'C');
+            $infoText .= "   |   Period: " . formatDate($dateFrom) . " to " . formatDate($dateTo);
         }
+        $pdf->Cell(0, 8, '  ' . $infoText, 0, 1, 'L');
         
         if ($courseId || $slotId || $teacherId || $status || $studentName) {
             $filters = [];
@@ -151,11 +154,16 @@ if (isset($_GET['export']) && !empty($results)) {
             if ($status) $filters[] = "Status: " . ucfirst($status);
             if ($studentName) $filters[] = "Student: " . $studentName;
             
-            $pdf->SetFont('helvetica', 'I', 9);
-            $pdf->Cell(0, 6, "Filters applied: " . implode(" | ", $filters), 0, 1, 'C');
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->SetTextColor(10, 25, 47);
+            $pdf->Cell(30, 6, "  Applied Filters:", 0, 0, 'L');
+            
+            $pdf->SetFont('helvetica', '', 9);
+            $pdf->SetTextColor(80, 80, 80);
+            $pdf->Cell(0, 6, implode("  •  ", $filters), 0, 1, 'L');
         }
         
-        $pdf->Ln(5);
+        $pdf->Ln(4);
         
         // Table HTML
         list($r, $g, $b) = sscanf($settings['table_header_bg'], "#%02x%02x%02x");

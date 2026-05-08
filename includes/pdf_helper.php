@@ -47,24 +47,35 @@ class NationalCollegePDF extends TCPDF {
         // Header Text
         $this->SetY(12);
         
-        // Deep navy blue color
-        $this->SetTextColor(10, 22, 40);
+        // Deep navy blue color for branding
+        $this->SetTextColor(10, 25, 47);
         
-        $this->SetFont('helvetica', 'B', 22);
+        // Main College Title
+        $this->SetFont('helvetica', 'B', 24);
         $this->Cell(0, 10, 'NATIONAL COLLEGE OF TECHNOLOGY', 0, 1, 'C');
         
-        $this->SetFont('helvetica', '', 11);
-        $this->SetTextColor(80, 80, 80);
-        $this->Cell(0, 6, 'National Building Near UBL Bank University Road Sargodha', 0, 1, 'C');
-        $this->Cell(0, 6, 'ncet.sgd@gmail.com', 0, 1, 'C');
-        $this->Cell(0, 6, '0316-7772003 | 0316-7772004', 0, 1, 'C');
+        // Tagline / Sub-heading
+        $this->SetFont('helvetica', 'I', 11);
+        $this->SetTextColor(59, 130, 246);
+        $this->Cell(0, 6, 'Empowering Education Through Technology', 0, 1, 'C');
         
-        // Line break and bottom border
-        $this->SetY(42);
-        $this->SetDrawColor(10, 22, 40);
-        $this->SetLineWidth(0.6);
-        $this->Line(15, 39, $this->getPageWidth() - 15, 39);
-        $this->SetLineWidth(0.2); // reset line width
+        $this->Ln(1);
+        
+        $this->SetFont('helvetica', '', 10);
+        $this->SetTextColor(80, 80, 80);
+        $this->Cell(0, 5, 'National Building Near UBL Bank University Road Sargodha', 0, 1, 'C');
+        
+        $this->SetFont('helvetica', 'B', 10);
+        $this->SetTextColor(60, 60, 60);
+        $this->Cell(0, 5, 'Email: ncet.sgd@gmail.com   |   Phone: 0316-7772003, 0316-7772004', 0, 1, 'C');
+        
+        // Premium double border (Thick + Thin)
+        $this->SetY(44);
+        $this->SetDrawColor(10, 25, 47);
+        $this->SetLineWidth(0.8);
+        $this->Line(15, 44, $this->getPageWidth() - 15, 44);
+        $this->SetLineWidth(0.2);
+        $this->Line(15, 45.2, $this->getPageWidth() - 15, 45.2);
         
         // Watermark
         if ($this->settings['show_watermark'] && !empty($this->settings['watermark_text'])) {
