@@ -108,10 +108,10 @@ try {
                 <div class="role-tab active" onclick="selectRole('admin',this)" data-email="admin@national.edu" data-pass="admin123">
                     <i class="fas fa-user-shield"></i> Admin
                 </div>
-                <div class="role-tab" onclick="selectRole('teacher',this)" data-email="ahmad@national.edu" data-pass="teacher123">
+                <div class="role-tab" onclick="selectRole('teacher',this)" data-email="asad@national.edu" data-pass="teacher123">
                     <i class="fas fa-chalkboard-teacher"></i> Teacher
                 </div>
-                <div class="role-tab" onclick="selectRole('receptionist',this)" data-email="reception@national.edu" data-pass="reception123">
+                <div class="role-tab" onclick="selectRole('receptionist',this)" data-email="zeenia@national.edu" data-pass="reception123">
                     <i class="fas fa-concierge-bell"></i> Reception
                 </div>
             </div>
@@ -131,7 +131,7 @@ try {
                 <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Sign In</button>
             </form>
             <div class="modal-demo">
-                <strong>Demo:</strong> admin@national.edu / admin123
+                <strong>Demo:</strong> admin@national.edu | asad@national.edu | zeenia@national.edu
             </div>
         </div>
     </div>
@@ -243,7 +243,10 @@ try {
         <div class="grid-3">
             <?php
             $icons = ['fa-code','fa-palette','fa-pen-ruler','fa-bullhorn','fa-search','fa-mobile-alt','fa-python','fa-php','fa-layer-group','fa-lock','fa-brain','fa-briefcase','fa-video'];
-            foreach ($coursesForDisplay as $i => $c): ?>
+            // Since we need to show all courses, let's fetch them all
+            $allCourses = [];
+            try { $allCourses = $pdo->query("SELECT name, duration, description FROM courses WHERE status='active'")->fetchAll(); } catch(Exception $e) {}
+            foreach ($allCourses as $i => $c): ?>
             <div class="course-card">
                 <div class="course-icon"><i class="fas <?php echo $icons[$i % count($icons)]; ?>"></i></div>
                 <div>
@@ -252,7 +255,7 @@ try {
                 </div>
             </div>
             <?php endforeach; ?>
-            <?php if (empty($coursesForDisplay)): ?>
+            <?php if (empty($allCourses)): ?>
                 <p style="color:var(--gray-500);grid-column:1/-1;text-align:center">Run the database seeder to load courses.</p>
             <?php endif; ?>
         </div>
@@ -271,17 +274,17 @@ try {
             <div style="text-align:center;padding:24px">
                 <i class="fas fa-map-marker-alt" style="font-size:28px;color:var(--royal);margin-bottom:12px"></i>
                 <h4 style="font-size:15px;margin-bottom:6px">Address</h4>
-                <p style="color:var(--gray-500);font-size:13px">123 Education Blvd, Lahore, Pakistan</p>
+                <p style="color:var(--gray-500);font-size:13px">National Building Near UBL Bank University Road Sargodha</p>
             </div>
             <div style="text-align:center;padding:24px">
                 <i class="fas fa-phone-alt" style="font-size:28px;color:var(--royal);margin-bottom:12px"></i>
                 <h4 style="font-size:15px;margin-bottom:6px">Phone</h4>
-                <p style="color:var(--gray-500);font-size:13px">+92 300 1234567</p>
+                <p style="color:var(--gray-500);font-size:13px">0316-7772003<br>0316-7772004<br>00 92 048 3212277</p>
             </div>
             <div style="text-align:center;padding:24px">
                 <i class="fas fa-envelope" style="font-size:28px;color:var(--royal);margin-bottom:12px"></i>
                 <h4 style="font-size:15px;margin-bottom:6px">Email</h4>
-                <p style="color:var(--gray-500);font-size:13px">info@nationalcollege.edu</p>
+                <p style="color:var(--gray-500);font-size:13px">ncet.sgd@gmail.com</p>
             </div>
         </div>
     </div>
@@ -314,23 +317,18 @@ try {
             </div>
             <div class="footer-col">
                 <h4>Courses</h4>
-                <ul>
-                    <?php foreach(array_slice($coursesForDisplay, 0, 5) as $c): ?>
+                <ul style="display:grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                    <?php foreach($allCourses as $c): ?>
                     <li><a href="#courses"><?php echo e($c['name']); ?></a></li>
                     <?php endforeach; ?>
-                    <?php if(empty($coursesForDisplay)): ?>
-                    <li><a href="#courses">Web Development</a></li>
-                    <li><a href="#courses">Graphic Design</a></li>
-                    <li><a href="#courses">Digital Marketing</a></li>
-                    <?php endif; ?>
                 </ul>
             </div>
             <div class="footer-col">
                 <h4>Contact Info</h4>
                 <ul class="footer-contact">
-                    <li><i class="fas fa-map-marker-alt"></i> <span>123 Education Blvd, Lahore, Pakistan</span></li>
-                    <li><i class="fas fa-phone-alt"></i> <span>+92 300 1234567</span></li>
-                    <li><i class="fas fa-envelope"></i> <span>info@nationalcollege.edu</span></li>
+                    <li><i class="fas fa-map-marker-alt"></i> <span>National Building Near UBL Bank University Road Sargodha</span></li>
+                    <li><i class="fas fa-phone-alt"></i> <span>0316-7772003 <br> 0316-7772004 <br> 00 92 048 3212277</span></li>
+                    <li><i class="fas fa-envelope"></i> <span>ncet.sgd@gmail.com</span></li>
                     <li><i class="fas fa-clock"></i> <span>Mon - Sat: 8:00 AM - 5:00 PM</span></li>
                 </ul>
             </div>

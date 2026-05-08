@@ -54,25 +54,22 @@ class NationalCollegePDF extends TCPDF {
 
         // Header Text
         $this->SetY(10);
-        $this->SetX($left_margin);
         
         // Convert hex color to RGB
         list($r, $g, $b) = sscanf($this->settings['header_color'], "#%02x%02x%02x");
         $this->SetTextColor($r, $g, $b);
         
         $this->SetFont('helvetica', 'B', 20);
-        $this->Cell(0, 8, $this->settings['college_name'], 0, 1, 'L');
+        $this->Cell(0, 8, $this->settings['college_name'], 0, 1, 'C');
         
         $this->SetFont('helvetica', '', 10);
         $this->SetTextColor(100, 100, 100);
-        $this->SetX($left_margin);
-        $this->Cell(0, 5, $this->settings['college_address'] . ' | Phone: ' . $this->settings['college_phone'], 0, 1, 'L');
-        
-        $this->SetX($left_margin);
-        $this->Cell(0, 5, 'Email: ' . $this->settings['college_email'], 0, 1, 'L');
+        $this->Cell(0, 5, $this->settings['college_address'], 0, 1, 'C');
+        $this->Cell(0, 5, $this->settings['college_email'], 0, 1, 'C');
+        $this->Cell(0, 5, str_replace(' | ', ' | ', $this->settings['college_phone']), 0, 1, 'C');
         
         // Line break
-        $this->SetY(32);
+        $this->SetY(35);
         $this->SetDrawColor(200, 200, 200);
         $this->Line(15, 32, $this->getPageWidth() - 15, 32);
         

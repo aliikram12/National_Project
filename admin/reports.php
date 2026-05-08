@@ -135,20 +135,38 @@ if (isset($_GET['export']) && !empty($results)) {
         list($r, $g, $b) = sscanf($settings['table_header_bg'], "#%02x%02x%02x");
         list($tr, $tg, $tb) = sscanf($settings['table_header_color'], "#%02x%02x%02x");
         
-        $html = '<table cellpadding="5" cellspacing="0" style="width:100%; border: 1px solid '.$settings['table_border_color'].'; font-size:9pt;">';
+        // Define widths based on report type
+        $widths = [];
+        if ($reportType === 'admissions') {
+            $widths = ['#' => '5%', 'Name' => '15%', 'Father Name' => '15%', 'Contact' => '13%', 'Course' => '15%', 'Slot' => '12%', 'Enrollment Date' => '15%', 'Status' => '10%'];
+        } elseif ($reportType === 'assessments') {
+            $widths = ['#' => '5%', 'Student' => '15%', 'Teacher' => '15%', 'Course' => '15%', 'Date' => '10%', 'Assessment Type' => '10%', 'Grade' => '5%', 'Notes' => '25%'];
+        } else {
+            $widths = ['#' => '5%']; // Default 5% for Sr no.
+        }
+        
+        $html = '<table cellpadding="6" cellspacing="0" style="width:100%; border: 1px solid '.$settings['table_border_color'].'; font-size:9pt; text-align:left;">';
         $html .= '<tr style="background-color:'.$settings['table_header_bg'].'; color:'.$settings['table_header_color'].'; font-weight:bold;">';
         
         $headers = array_keys($results[0]);
+        $html .= '<th style="border-bottom: 1px solid '.$settings['table_border_color'].'; width: 5%;">#</th>';
+        
         foreach ($headers as $h) {
-            $html .= '<th style="border-bottom: 1px solid '.$settings['table_border_color'].';">' . ucfirst(str_replace('_', ' ', $h)) . '</th>';
+            $headerName = ucfirst(str_replace('_', ' ', $h));
+            if ($h === 'id') continue; // Skip ID if we want
+            $w = isset($widths[$headerName]) ? 'width:'.$widths[$headerName].';' : '';
+            $html .= '<th style="border-bottom: 1px solid '.$settings['table_border_color'].'; '.$w.'">' . $headerName . '</th>';
         }
         $html .= '</tr>';
         
         $fill = false;
+        $srNo = 1;
         foreach ($results as $row) {
             $bgcolor = $fill ? '#f9fafb' : '#ffffff';
             $html .= '<tr style="background-color:'.$bgcolor.';">';
-            foreach ($row as $val) {
+            $html .= '<td style="border-bottom: 1px solid '.$settings['table_border_color'].';">' . $srNo++ . '</td>';
+            foreach ($row as $col => $val) {
+                if ($col === 'id') continue;
                 $html .= '<td style="border-bottom: 1px solid '.$settings['table_border_color'].';">' . htmlspecialchars($val ?? '') . '</td>';
             }
             $html .= '</tr>';
@@ -292,15 +310,19 @@ if (isset($_GET['export']) && !empty($results)) {
             <table>
                 <thead>
                     <tr>
+                        <th>#</th>
                         <?php foreach (array_keys($results[0]) as $header): ?>
+                            <?php if ($header === 'id') continue; ?>
                             <th><?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $header))); ?></th>
                         <?php endforeach; ?>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($results as $row): ?>
+                    <?php $srNo = 1; foreach ($results as $row): ?>
                         <tr>
+                            <td><?php echo $srNo++; ?></td>
                             <?php foreach ($row as $col => $val): ?>
+                                <?php if ($col === 'id') continue; ?>
                                 <td>
                                     <?php 
                                     if ($col === 'status') {
