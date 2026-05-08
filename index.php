@@ -47,6 +47,14 @@ $coursesForDisplay = [];
 try {
     $coursesForDisplay = $pdo->query("SELECT name, duration, description FROM courses WHERE status='active' LIMIT 9")->fetchAll();
 } catch(Exception $e) {}
+
+// Stats for hero
+$totalStudents = 0; $totalCourses = 0; $totalTeachers = 0;
+try {
+    $totalStudents = $pdo->query("SELECT COUNT(*) FROM students")->fetchColumn();
+    $totalCourses = $pdo->query("SELECT COUNT(*) FROM courses WHERE status='active'")->fetchColumn();
+    $totalTeachers = $pdo->query("SELECT COUNT(*) FROM users WHERE role='teacher' AND status='active'")->fetchColumn();
+} catch(Exception $e) {}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,6 +65,7 @@ try {
     <title>National College | Learning Management System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/landing.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
@@ -65,38 +74,68 @@ try {
 <nav class="landing-nav" id="mainNav">
     <div class="container">
         <a href="#" class="logo"><i class="fas fa-graduation-cap"></i> National College</a>
+        <button class="hamburger" id="hamburgerBtn" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+            <i class="fas fa-bars"></i>
+        </button>
         <div class="nav-links">
             <a href="#home">Home</a>
             <a href="#about">About</a>
             <a href="#features">Features</a>
             <a href="#courses">Courses</a>
             <a href="#contact">Contact</a>
-            <div class="login-dropdown">
-                <button class="login-btn"><i class="fas fa-sign-in-alt"></i> Login Portal</button>
-                <div class="login-dropdown-content">
-                    <h4 style="margin-bottom:16px;font-size:16px;color:var(--navy);">Quick Access Portal</h4>
-                    <div style="display:flex;flex-direction:column;gap:10px;">
-                        <a href="#loginSection" class="btn btn-primary btn-sm" style="justify-content:flex-start" onclick="fillLogin('admin@national.edu','admin123','admin')">
-                            <i class="fas fa-user-shield"></i> Admin Portal
-                        </a>
-                        <a href="#loginSection" class="btn btn-sm" style="background:var(--cyan);color:#fff;justify-content:flex-start" onclick="fillLogin('ahmad@national.edu','teacher123','teacher')">
-                            <i class="fas fa-chalkboard-teacher"></i> Teacher Portal
-                        </a>
-                        <a href="#loginSection" class="btn btn-success btn-sm" style="justify-content:flex-start" onclick="fillLogin('reception@national.edu','reception123','receptionist')">
-                            <i class="fas fa-concierge-bell"></i> Reception Portal
-                        </a>
-                    </div>
-                    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--gray-200);font-size:12px;color:var(--gray-500);">
-                        <strong>Demo Credentials:</strong><br>
-                        Admin: admin@national.edu / admin123<br>
-                        Teacher: ahmad@national.edu / teacher123<br>
-                        Reception: reception@national.edu / reception123
-                    </div>
-                </div>
-            </div>
+            <button class="login-portal-btn" onclick="openLoginModal()">
+                <i class="fas fa-sign-in-alt"></i> Login Portal
+            </button>
         </div>
     </div>
 </nav>
+
+<!-- ===== LOGIN MODAL ===== -->
+<div class="modal-overlay" id="loginModal">
+    <div class="login-modal">
+        <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+        <div class="modal-header">
+            <div class="modal-icon"><i class="fas fa-graduation-cap"></i></div>
+            <h2>Welcome Back</h2>
+            <p>Sign in to your portal</p>
+        </div>
+        <div class="modal-body">
+            <?php if ($error): ?>
+                <div class="alert alert-danger" style="margin-bottom:16px;border-radius:10px"><i class="fas fa-exclamation-circle"></i> <?php echo e($error); ?></div>
+            <?php endif; ?>
+
+            <div class="role-tabs">
+                <div class="role-tab active" onclick="selectRole('admin',this)" data-email="admin@national.edu" data-pass="admin123">
+                    <i class="fas fa-user-shield"></i> Admin
+                </div>
+                <div class="role-tab" onclick="selectRole('teacher',this)" data-email="ahmad@national.edu" data-pass="teacher123">
+                    <i class="fas fa-chalkboard-teacher"></i> Teacher
+                </div>
+                <div class="role-tab" onclick="selectRole('receptionist',this)" data-email="reception@national.edu" data-pass="reception123">
+                    <i class="fas fa-concierge-bell"></i> Reception
+                </div>
+            </div>
+
+            <form method="POST" class="modal-form" id="loginForm">
+                <?php csrfField(); ?>
+                <input type="hidden" name="login" value="1">
+                <input type="hidden" name="role" id="modalRole" value="admin">
+                <div class="form-group">
+                    <label for="modalEmail"><i class="fas fa-envelope" style="margin-right:4px;color:#94a3b8"></i> Email Address</label>
+                    <input type="email" name="email" id="modalEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="modalPassword"><i class="fas fa-lock" style="margin-right:4px;color:#94a3b8"></i> Password</label>
+                    <input type="password" name="password" id="modalPassword" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+            </form>
+            <div class="modal-demo">
+                <strong>Demo:</strong> admin@national.edu / admin123
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- ===== HERO ===== -->
 <section class="hero" id="home">
@@ -105,8 +144,13 @@ try {
             <h1>Empowering Education<br>Through <span>Technology</span></h1>
             <p>National College's comprehensive Learning Management & Admission System. Streamline admissions, track attendance, manage assessments, and generate professional reports — all in one platform.</p>
             <div class="hero-actions">
-                <a href="#loginSection" class="btn btn-lg" style="background:#fff;color:var(--navy);font-weight:700"><i class="fas fa-rocket"></i> Get Started</a>
-                <a href="#features" class="btn btn-lg btn-outline" style="border-color:rgba(255,255,255,.3);color:#fff"><i class="fas fa-play-circle"></i> Learn More</a>
+                <a href="javascript:void(0)" onclick="openLoginModal()" class="btn-hero-primary"><i class="fas fa-rocket"></i> Get Started</a>
+                <a href="#features" class="btn-hero-outline"><i class="fas fa-play-circle"></i> Learn More</a>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat"><h3><?php echo $totalStudents ?: '500'; ?>+</h3><p>Students Enrolled</p></div>
+                <div class="hero-stat"><h3><?php echo $totalCourses ?: '12'; ?>+</h3><p>Active Courses</p></div>
+                <div class="hero-stat"><h3><?php echo $totalTeachers ?: '20'; ?>+</h3><p>Expert Teachers</p></div>
             </div>
         </div>
         <div class="hero-visual">
@@ -215,43 +259,6 @@ try {
     </div>
 </section>
 
-<!-- ===== LOGIN SECTION ===== -->
-<section class="section" id="loginSection" style="background:linear-gradient(135deg,var(--navy),#0f2a4a)">
-    <div class="container" style="max-width:480px">
-        <div class="login-card">
-            <div class="login-icon"><i class="fas fa-graduation-cap"></i></div>
-            <h2>Login to Portal</h2>
-            <p class="subtitle">Access your dashboard securely</p>
-
-            <?php if ($error): ?>
-                <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> <?php echo e($error); ?></div>
-            <?php endif; ?>
-
-            <form method="POST" action="#loginSection">
-                <?php csrfField(); ?>
-                <input type="hidden" name="login" value="1">
-                <div class="form-group">
-                    <label for="role">Select Portal</label>
-                    <select name="role" id="role" class="form-control" required>
-                        <option value="admin">Administrator</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="receptionist">Receptionist</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <input type="email" name="email" id="email" class="form-control" required placeholder="Enter your email">
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" name="password" id="password" class="form-control" required placeholder="Enter your password">
-                </div>
-                <button type="submit" class="btn btn-primary btn-lg" style="width:100%"><i class="fas fa-sign-in-alt"></i> Login</button>
-            </form>
-        </div>
-    </div>
-</section>
-
 <!-- ===== CONTACT ===== -->
 <section class="section" id="contact">
     <div class="container">
@@ -283,28 +290,102 @@ try {
 <!-- ===== FOOTER ===== -->
 <footer class="landing-footer">
     <div class="container">
-        <p>&copy; <?php echo date('Y'); ?> National College. All rights reserved. Built with excellence.</p>
+        <div class="footer-main">
+            <div class="footer-brand">
+                <h3><i class="fas fa-graduation-cap"></i> National College</h3>
+                <p>Empowering students with industry-ready skills through modern education and cutting-edge technology since 2010.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#courses">Courses</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Courses</h4>
+                <ul>
+                    <?php foreach(array_slice($coursesForDisplay, 0, 5) as $c): ?>
+                    <li><a href="#courses"><?php echo e($c['name']); ?></a></li>
+                    <?php endforeach; ?>
+                    <?php if(empty($coursesForDisplay)): ?>
+                    <li><a href="#courses">Web Development</a></li>
+                    <li><a href="#courses">Graphic Design</a></li>
+                    <li><a href="#courses">Digital Marketing</a></li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <ul class="footer-contact">
+                    <li><i class="fas fa-map-marker-alt"></i> <span>123 Education Blvd, Lahore, Pakistan</span></li>
+                    <li><i class="fas fa-phone-alt"></i> <span>+92 300 1234567</span></li>
+                    <li><i class="fas fa-envelope"></i> <span>info@nationalcollege.edu</span></li>
+                    <li><i class="fas fa-clock"></i> <span>Mon - Sat: 8:00 AM - 5:00 PM</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            &copy; <?php echo date('Y'); ?> National College. All rights reserved. Built with excellence.
+        </div>
     </div>
 </footer>
 
 <script>
 // Navbar scroll effect
-window.addEventListener('scroll',function(){
+window.addEventListener('scroll', function(){
     document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 50);
 });
-// Fill login helper
-function fillLogin(email, pass, role) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = pass;
-    document.getElementById('role').value = role;
+
+// Login Modal
+function openLoginModal() {
+    document.getElementById('loginModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
 }
-// Smooth scroll for anchor links
+function closeLoginModal() {
+    document.getElementById('loginModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+document.getElementById('loginModal').addEventListener('click', function(e) {
+    if (e.target === this) closeLoginModal();
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLoginModal();
+});
+
+// Role selection
+function selectRole(role, el) {
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('modalRole').value = role;
+    document.getElementById('modalEmail').value = el.dataset.email || '';
+    document.getElementById('modalPassword').value = el.dataset.pass || '';
+}
+
+// Smooth scroll
 document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', function(e) {
         const target = document.querySelector(this.getAttribute('href'));
         if (target) { e.preventDefault(); target.scrollIntoView({behavior:'smooth',block:'start'}); }
     });
 });
+
+// Auto-open modal if there was a login error
+<?php if ($error): ?>
+document.addEventListener('DOMContentLoaded', function(){ openLoginModal(); });
+<?php endif; ?>
 </script>
 </body>
 </html>

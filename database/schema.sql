@@ -181,6 +181,30 @@ CREATE TABLE pdf_templates (
 ) ENGINE=InnoDB;
 
 -- ============================================
+-- 9b. PDF SETTINGS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS pdf_settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    college_name VARCHAR(200) DEFAULT 'National College',
+    college_logo VARCHAR(500) DEFAULT '',
+    college_address VARCHAR(500) DEFAULT '123 Education Blvd, Lahore, Pakistan',
+    college_phone VARCHAR(50) DEFAULT '+92 300 1234567',
+    college_email VARCHAR(100) DEFAULT 'info@nationalcollege.edu',
+    footer_text VARCHAR(500) DEFAULT 'This is a system-generated document.',
+    watermark_text VARCHAR(100) DEFAULT 'NATIONAL COLLEGE',
+    header_color VARCHAR(20) DEFAULT '#0A1628',
+    table_header_bg VARCHAR(20) DEFAULT '#0A1628',
+    table_header_color VARCHAR(20) DEFAULT '#FFFFFF',
+    table_border_color VARCHAR(20) DEFAULT '#dee2e6',
+    show_logo TINYINT(1) DEFAULT 1,
+    show_watermark TINYINT(1) DEFAULT 0,
+    show_signature TINYINT(1) DEFAULT 1,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+INSERT INTO pdf_settings (id) VALUES (1) ON DUPLICATE KEY UPDATE id=1;
+
+-- ============================================
 -- 10. NOTIFICATIONS TABLE
 -- ============================================
 CREATE TABLE notifications (
