@@ -7,7 +7,7 @@ echo "=== National College LMS - Database Seeder ===\n\n";
 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
 
 // Clear existing data
-$tables = ['notifications', 'assessments', 'attendance', 'course_teachers', 'enrollments', 'students', 'courses', 'users', 'pdf_templates'];
+$tables = ['notifications', 'assessments', 'attendance', 'course_teachers', 'enrollments', 'students', 'slots', 'courses', 'users', 'pdf_templates'];
 foreach ($tables as $table) {
     $pdo->exec("TRUNCATE TABLE $table");
 }
@@ -18,86 +18,116 @@ $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 // 1. USERS
 // ============================================
 $users = [
-    ['Super Admin',        'admin@national.edu',      'admin123',      'admin'],
-    ['Prof. Ahmad Khan',   'ahmad@national.edu',      'teacher123',    'teacher'],
-    ['Prof. Fatima Noor',  'fatima@national.edu',     'teacher123',    'teacher'],
-    ['Prof. Bilal Raza',   'bilal@national.edu',      'teacher123',    'teacher'],
-    ['Prof. Ayesha Malik', 'ayesha@national.edu',     'teacher123',    'teacher'],
-    ['Prof. Usman Ali',    'usman@national.edu',      'teacher123',    'teacher'],
-    ['Sara Receptionist',  'reception@national.edu',  'reception123',  'receptionist'],
-    ['Hina Receptionist',  'hina@national.edu',       'reception123',  'receptionist'],
+    // Admin
+    ['Mustafa Ahmad',        'admin@national.edu',      'admin123',      'admin', 'active'],
+    
+    // Receptionist
+    ['Miss Zeenia',          'zeenia@national.edu',     'reception123',  'receptionist', 'active'],
+    
+    // Teachers
+    ['Mr Asad-Ullah',        'asad@national.edu',       'teacher123',    'teacher', 'active'],
+    ['Mr Amjid',             'amjid@national.edu',      'teacher123',    'teacher', 'active'],
+    ['Miss Bisma',           'bisma@national.edu',      'teacher123',    'teacher', 'active'],
+    ['Mr Ali Ikram',         'ali@national.edu',        'teacher123',    'teacher', 'active'],
+    ['Miss Kiran',           'kiran@national.edu',      'teacher123',    'teacher', 'active'],
+    ['Mr Amir',              'amir@national.edu',       'teacher123',    'teacher', 'active'],
 ];
 
-$userStmt = $pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+$userStmt = $pdo->prepare("INSERT INTO users (name, email, password, role, status) VALUES (?, ?, ?, ?, ?)");
 $userIds = [];
 foreach ($users as $u) {
-    $userStmt->execute([$u[0], $u[1], password_hash($u[2], PASSWORD_DEFAULT), $u[3]]);
+    $userStmt->execute([$u[0], $u[1], password_hash($u[2], PASSWORD_DEFAULT), $u[3], $u[4]]);
     $userIds[] = $pdo->lastInsertId();
 }
 echo "✓ " . count($users) . " users created\n";
 
-// Get teacher IDs
-$teacherIds = [];
-$teacherStmt = $pdo->query("SELECT id FROM users WHERE role='teacher' ORDER BY id");
-while ($row = $teacherStmt->fetch()) {
-    $teacherIds[] = $row['id'];
+// Get teacher IDs by name to assign properly
+$teacherMap = [];
+$tStmt = $pdo->query("SELECT id, name FROM users WHERE role='teacher'");
+while ($row = $tStmt->fetch()) {
+    $teacherMap[$row['name']] = $row['id'];
 }
 
 // ============================================
-// 2. COURSES (13 courses as required)
+// 2. COURSES
 // ============================================
-$courses = [
-    ['Web Development',       '6 Months', 'Learn HTML, CSS, JavaScript, PHP and build modern responsive websites and web applications.'],
-    ['Graphic Designing',     '4 Months', 'Master Adobe Photoshop, Illustrator, and InDesign for print and digital media design.'],
-    ['UI/UX Design',          '5 Months', 'User experience research, wireframing, prototyping with Figma and Adobe XD.'],
-    ['Digital Marketing',     '3 Months', 'SEO, social media marketing, Google Ads, email marketing and analytics.'],
-    ['SEO',                   '2 Months', 'Search Engine Optimization techniques, keyword research, on-page and off-page SEO.'],
-    ['Flutter Development',   '6 Months', 'Cross-platform mobile app development with Flutter and Dart programming.'],
-    ['Python Programming',    '4 Months', 'Python fundamentals, data structures, OOP, and introduction to data science.'],
-    ['PHP Development',       '5 Months', 'Server-side development with PHP, MySQL, Laravel framework and RESTful APIs.'],
-    ['MERN Stack',            '8 Months', 'Full-stack development with MongoDB, Express.js, React.js and Node.js.'],
-    ['Cyber Security',        '6 Months', 'Network security, ethical hacking, penetration testing, and security auditing.'],
-    ['AI & Machine Learning', '8 Months', 'Machine learning algorithms, neural networks, TensorFlow and real-world AI projects.'],
-    ['Office Management',     '3 Months', 'Microsoft Office Suite, business communication, data entry and office administration.'],
-    ['Video Editing',         '3 Months', 'Adobe Premiere Pro, After Effects, DaVinci Resolve and professional video production.'],
+$courseNames = [
+    'IT Courses', 'Regular E-Commerce Courses', 'Regular Civil Courses', 'Competency Based Diplomas',
+    'Web Development', 'Graphic Designing', 'Computer Application', 'Data Entry Operator',
+    'Python Programming', 'Office Management', 'Computerized Accounting', 'Blogging',
+    'Web Designing', 'Shorthand', 'Photography', 'Video Editing', 'Digital Marketing',
+    'Shopify Development', 'Freelancing', 'E-Commerce', 'Amazon Virtual Assistant',
+    'NEBOSH', 'OTHM (Level-3)', 'IOSH Managing Safely (UK)', 'OSHA (USA) Workplace Safety',
+    'HSE Officer (Pakistan)', 'Safety Inspector (Pakistan)', 'Civil Surveyor (Pakistan)',
+    'AutoCAD (2D & 3D)', 'Quantity Surveyor (QS)', '3 Months Diploma', '6 Months Diploma',
+    '1 Year Diploma', '2 Year Diploma', '3 Year Diploma'
 ];
 
 $courseStmt = $pdo->prepare("INSERT INTO courses (name, duration, description) VALUES (?, ?, ?)");
 $courseIds = [];
-foreach ($courses as $c) {
-    $courseStmt->execute([$c[0], $c[1], $c[2]]);
-    $courseIds[] = $pdo->lastInsertId();
+foreach ($courseNames as $idx => $cName) {
+    // Generate some random duration and description
+    $duration = (strpos($cName, 'Diploma') !== false) ? $cName : '3 Months';
+    $desc = "Professional course for $cName at National College of Technology.";
+    $courseStmt->execute([$cName, $duration, $desc]);
+    $courseIds[$cName] = $pdo->lastInsertId();
 }
-echo "✓ " . count($courses) . " courses created\n";
+echo "✓ " . count($courseNames) . " courses created\n";
 
 // ============================================
-// 3. ASSIGN TEACHERS TO COURSES
+// 3. SLOTS
 // ============================================
-$assignments = [
-    [$courseIds[0], $teacherIds[0], 1],  // Web Dev - Ahmad - Slot 1
-    [$courseIds[0], $teacherIds[0], 2],  // Web Dev - Ahmad - Slot 2
-    [$courseIds[1], $teacherIds[1], 1],  // Graphic Design - Fatima - Slot 1
-    [$courseIds[2], $teacherIds[1], 3],  // UI/UX - Fatima - Slot 3
-    [$courseIds[3], $teacherIds[2], 2],  // Digital Marketing - Bilal - Slot 2
-    [$courseIds[4], $teacherIds[2], 4],  // SEO - Bilal - Slot 4
-    [$courseIds[5], $teacherIds[3], 1],  // Flutter - Ayesha - Slot 1
-    [$courseIds[6], $teacherIds[3], 3],  // Python - Ayesha - Slot 3
-    [$courseIds[7], $teacherIds[0], 3],  // PHP Dev - Ahmad - Slot 3
-    [$courseIds[8], $teacherIds[4], 2],  // MERN - Usman - Slot 2
-    [$courseIds[9], $teacherIds[4], 4],  // Cyber Security - Usman - Slot 4
-    [$courseIds[10], $teacherIds[3], 4], // AI/ML - Ayesha - Slot 4
-    [$courseIds[11], $teacherIds[1], 4], // Office Mgmt - Fatima - Slot 4
-    [$courseIds[12], $teacherIds[2], 1], // Video Editing - Bilal - Slot 1
+$slots = [
+    '8:00 AM - 10:00 AM',
+    '10:00 AM - 12:00 PM',
+    '12:00 PM - 2:00 PM',
+    '2:30 PM - 4:30 PM',
+    '4:30 PM - 6:30 PM',
+    '6:30 PM - 8:30 PM'
 ];
-
-$assignStmt = $pdo->prepare("INSERT INTO course_teachers (course_id, teacher_id, slot_id) VALUES (?, ?, ?)");
-foreach ($assignments as $a) {
-    $assignStmt->execute($a);
+$slotStmt = $pdo->prepare("INSERT INTO slots (time_range) VALUES (?)");
+$slotIds = [];
+foreach ($slots as $s) {
+    $slotStmt->execute([$s]);
+    $slotIds[] = $pdo->lastInsertId();
 }
-echo "✓ " . count($assignments) . " teacher-course assignments created\n";
+echo "✓ " . count($slots) . " slots created\n";
 
 // ============================================
-// 4. STUDENTS (40 realistic students)
+// 4. ASSIGN TEACHERS TO COURSES
+// ============================================
+// IT Teachers: Mr Asad-Ullah, Miss Bisma, Mr Ali Ikram, Miss Kiran
+// Civil Teachers: Mr Amjid, Mr Amir
+
+$itTeachers = [$teacherMap['Mr Asad-Ullah'], $teacherMap['Miss Bisma'], $teacherMap['Mr Ali Ikram'], $teacherMap['Miss Kiran']];
+$civilTeachers = [$teacherMap['Mr Amjid'], $teacherMap['Mr Amir']];
+
+$assignments = [];
+$assignStmt = $pdo->prepare("INSERT INTO course_teachers (course_id, teacher_id, slot_id) VALUES (?, ?, ?)");
+$courseTeacherMap = [];
+
+foreach ($courseNames as $cName) {
+    $cId = $courseIds[$cName];
+    // Determine teacher type based on course name
+    if (strpos(strtolower($cName), 'civil') !== false || strpos(strtolower($cName), 'autocad') !== false || strpos(strtolower($cName), 'surveyor') !== false || strpos(strtolower($cName), 'safety') !== false || strpos(strtolower($cName), 'nebosh') !== false || strpos(strtolower($cName), 'osh') !== false || strpos(strtolower($cName), 'hse') !== false) {
+        $tId = $civilTeachers[array_rand($civilTeachers)];
+    } else {
+        $tId = $itTeachers[array_rand($itTeachers)];
+    }
+    
+    // Assign to a random slot
+    $sId = $slotIds[array_rand($slotIds)];
+    
+    try {
+        $assignStmt->execute([$cId, $tId, $sId]);
+        $assignments[] = [$cId, $tId, $sId];
+        $courseTeacherMap[$cId] = ['teacher_id' => $tId, 'slot_id' => $sId];
+    } catch(Exception $e) {}
+}
+echo "✓ Teachers assigned to courses\n";
+
+// ============================================
+// 5. STUDENTS
 // ============================================
 $studentNames = [
     ['Ali Hassan',         'Imran Hassan',         '2003-03-15', '03001234567', '45 Gulberg III, Lahore'],
@@ -115,185 +145,86 @@ $studentNames = [
     ['Owais Raza',         'Raza Muhammad',          '2004-04-01', '03221234569', '24 Wapda Town, Lahore'],
     ['Sadia Parveen',      'Muhammad Akram',        '2003-07-16', '03331234569', '57 Valencia Town, Lahore'],
     ['Danish Ali',         'Muhammad Ali',           '2002-09-23', '03441234569', '80 EME Society, Lahore'],
-    ['Rimsha Kanwal',      'Tariq Mahmood',         '2004-03-11', '03001234570', '15 Bahria Town, Lahore'],
-    ['Asad Iqbal',         'Muhammad Iqbal',        '2003-11-28', '03112345681', '48 Lake City, Lahore'],
-    ['Madiha Naz',         'Nazir Ahmed',           '2004-05-06', '03221234570', '81 Askari Colony, Lahore'],
-    ['Bilal Ahmad',        'Liaquat Ahmad',         '2002-08-19', '03331234570', '26 GT Road, Lahore'],
-    ['Anum Sheikh',        'Sheikh Rasheed',        '2003-01-07', '03441234570', '59 Mall Road, Lahore'],
-    ['Kamran Yousaf',      'Muhammad Yousaf',       '2004-10-14', '03001234571', '82 Cavalry Ground, Lahore'],
-    ['Farhat Jabeen',      'Jabeen Akhtar',         '2003-06-22', '03112345682', '17 Allama Iqbal Town, Lahore'],
-    ['Waqar Hassan',       'Hasan Ali',             '2002-12-31', '03221234571', '50 Chungi, Lahore'],
-    ['Bushra Qadir',       'Abdul Qadir',           '2004-02-17', '03331234571', '83 Barkat Market, Lahore'],
-    ['Junaid Jamshed',     'Jamshed Akhtar',        '2003-08-05', '03441234571', '28 Thokar Niaz Baig, Lahore'],
-    ['Rabia Aslam',        'Muhammad Aslam',        '2004-11-20', '03001234572', '61 Shahdara, Lahore'],
-    ['Nabeel Ashraf',      'Muhammad Ashraf',       '2002-07-13', '03112345683', '84 Raiwind Road, Lahore'],
-    ['Tayyaba Rehman',     'Abdul Rehman',          '2003-04-26', '03221234572', '19 Multan Road, Lahore'],
-    ['Adeel Mustafa',      'Mustafa Khan',          '2004-09-08', '03331234572', '52 Ferozpur Road, Lahore'],
-    ['Sajida Begum',       'Nazar Hussain',         '2003-10-15', '03441234572', '85 Canal Road, Lahore'],
-    ['Irfan Haider',       'Haider Ali',            '2002-06-02', '03001234573', '30 Davis Road, Lahore'],
-    ['Kiran Shahzadi',     'Shahzad Hussain',       '2004-01-19', '03112345684', '63 Jail Road, Lahore'],
-    ['Mohsin Raza',        'Ghulam Raza',           '2003-03-28', '03221234573', '86 Queens Road, Lahore'],
-    ['Laiba Akram',        'Muhammad Akram',        '2004-12-11', '03331234573', '21 Main Boulevard, Lahore'],
-    ['Zubair Aslam',       'Aslam Pervez',          '2002-05-24', '03441234573', '54 Empress Road, Lahore'],
-    ['Sumera Yousaf',      'Muhammad Yousaf',       '2003-09-07', '03001234574', '87 Beadon Road, Lahore'],
-    ['Atif Raza',          'Raza Hussain',          '2004-08-15', '03112345685', '32 McLeod Road, Lahore'],
-    ['Arooj Zahra',        'Zahra Bashir',          '2003-02-20', '03221234574', '65 Cooper Road, Lahore'],
-    ['Shoaib Malik',       'Malik Riaz',            '2002-11-16', '03331234574', '88 Abbot Road, Lahore'],
-    ['Nimra Batool',       'Ghulam Batool',         '2004-07-03', '03441234574', '23 Lawrence Road, Lahore'],
 ];
 
 $studentStmt = $pdo->prepare("INSERT INTO students (name, father_name, dob, contact, address) VALUES (?, ?, ?, ?, ?)");
-$studentIds = [];
+$studentIdList = [];
 foreach ($studentNames as $s) {
     $studentStmt->execute([$s[0], $s[1], $s[2], $s[3], $s[4]]);
-    $studentIds[] = $pdo->lastInsertId();
+    $studentIdList[] = $pdo->lastInsertId();
 }
 echo "✓ " . count($studentNames) . " students created\n";
 
 // ============================================
-// 5. ENROLLMENTS (distribute students across courses and slots)
+// 6. ENROLLMENTS
 // ============================================
-$enrollData = [
-    // Web Development - Slot 1 & 2
-    [$studentIds[0],  $courseIds[0], 1], [$studentIds[1],  $courseIds[0], 1],
-    [$studentIds[2],  $courseIds[0], 2], [$studentIds[3],  $courseIds[0], 2],
-    [$studentIds[4],  $courseIds[0], 1],
-    // Graphic Designing - Slot 1
-    [$studentIds[5],  $courseIds[1], 1], [$studentIds[6],  $courseIds[1], 1],
-    [$studentIds[7],  $courseIds[1], 1],
-    // UI/UX Design - Slot 3
-    [$studentIds[8],  $courseIds[2], 3], [$studentIds[9],  $courseIds[2], 3],
-    [$studentIds[10], $courseIds[2], 3],
-    // Digital Marketing - Slot 2
-    [$studentIds[11], $courseIds[3], 2], [$studentIds[12], $courseIds[3], 2],
-    // SEO - Slot 4
-    [$studentIds[13], $courseIds[4], 4], [$studentIds[14], $courseIds[4], 4],
-    // Flutter Development - Slot 1
-    [$studentIds[15], $courseIds[5], 1], [$studentIds[16], $courseIds[5], 1],
-    [$studentIds[17], $courseIds[5], 1],
-    // Python Programming - Slot 3
-    [$studentIds[18], $courseIds[6], 3], [$studentIds[19], $courseIds[6], 3],
-    [$studentIds[20], $courseIds[6], 3],
-    // PHP Development - Slot 3
-    [$studentIds[21], $courseIds[7], 3], [$studentIds[22], $courseIds[7], 3],
-    // MERN Stack - Slot 2
-    [$studentIds[23], $courseIds[8], 2], [$studentIds[24], $courseIds[8], 2],
-    [$studentIds[25], $courseIds[8], 2],
-    // Cyber Security - Slot 4
-    [$studentIds[26], $courseIds[9], 4], [$studentIds[27], $courseIds[9], 4],
-    // AI & Machine Learning - Slot 4
-    [$studentIds[28], $courseIds[10], 4], [$studentIds[29], $courseIds[10], 4],
-    [$studentIds[30], $courseIds[10], 4],
-    // Office Management - Slot 4
-    [$studentIds[31], $courseIds[11], 4], [$studentIds[32], $courseIds[11], 4],
-    // Video Editing - Slot 1
-    [$studentIds[33], $courseIds[12], 1], [$studentIds[34], $courseIds[12], 1],
-    [$studentIds[35], $courseIds[12], 1],
-    // Extra enrollments for variety
-    [$studentIds[36], $courseIds[0], 2], [$studentIds[37], $courseIds[3], 2],
-    [$studentIds[38], $courseIds[6], 3], [$studentIds[39], $courseIds[9], 4],
-];
-
 $enrollStmt = $pdo->prepare("INSERT INTO enrollments (student_id, course_id, slot_id, enrollment_date) VALUES (?, ?, ?, ?)");
-$enrollDates = ['2025-09-01','2025-09-02','2025-09-03','2025-09-05','2025-09-08','2025-09-10','2025-09-12','2025-09-15','2025-10-01','2025-10-05','2025-10-10','2025-10-15','2025-11-01','2025-11-05','2025-11-10','2025-11-15','2025-12-01','2025-12-05','2025-12-10','2025-12-15','2026-01-05','2026-01-10','2026-01-15','2026-01-20','2026-02-01','2026-02-05','2026-02-10','2026-02-15','2026-03-01','2026-03-05','2026-03-10','2026-03-15','2026-04-01','2026-04-05','2026-04-10','2026-04-15','2026-04-20','2026-04-25','2026-05-01','2026-05-05'];
+$enrollDates = ['2026-05-01','2026-05-02','2026-05-03','2026-05-05','2026-05-08'];
 $enrollCount = 0;
-foreach ($enrollData as $idx => $ed) {
+
+$cIdsList = array_values($courseIds);
+foreach ($studentIdList as $idx => $sId) {
+    // Each student gets 2 random courses
+    $r1 = $cIdsList[array_rand($cIdsList)];
+    $r2 = $cIdsList[array_rand($cIdsList)];
+    while($r2 == $r1) $r2 = $cIdsList[array_rand($cIdsList)];
+    
     $date = $enrollDates[$idx % count($enrollDates)];
-    $enrollStmt->execute([$ed[0], $ed[1], $ed[2], $date]);
+    
+    $ct1 = $courseTeacherMap[$r1];
+    $enrollStmt->execute([$sId, $r1, $ct1['slot_id'], $date]);
+    $enrollCount++;
+    
+    $ct2 = $courseTeacherMap[$r2];
+    $enrollStmt->execute([$sId, $r2, $ct2['slot_id'], $date]);
     $enrollCount++;
 }
 echo "✓ $enrollCount enrollments created\n";
 
 // ============================================
-// 6. ATTENDANCE DATA (realistic distribution)
+// 7. ATTENDANCE & ASSESSMENTS
 // ============================================
 $attendanceStmt = $pdo->prepare("INSERT INTO attendance (student_id, course_id, slot_id, date, status, marked_by) VALUES (?, ?, ?, ?, ?, ?)");
-$statuses = ['present', 'present', 'present', 'present', 'absent', 'present', 'present', 'leave', 'present', 'present'];
-$attendanceCount = 0;
+$assessmentStmt = $pdo->prepare("INSERT INTO assessments (student_id, teacher_id, course_id, date, assessment_type, notes, grade) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
-// Generate attendance for last 30 days for enrolled students
-foreach ($enrollData as $ed) {
-    $studentId = $ed[0];
-    $courseId = $ed[1];
-    $slotId = $ed[2];
+$statuses = ['present', 'present', 'present', 'present', 'absent'];
+$attendanceCount = 0;
+$assessmentCount = 0;
+
+$enrollments = $pdo->query("SELECT * FROM enrollments")->fetchAll();
+foreach ($enrollments as $e) {
+    $studentId = $e['student_id'];
+    $courseId = $e['course_id'];
+    $slotId = $e['slot_id'];
+    $teacherId = $courseTeacherMap[$courseId]['teacher_id'];
     
-    // Find teacher for this course/slot
-    $tStmt = $pdo->prepare("SELECT teacher_id FROM course_teachers WHERE course_id = ? AND slot_id = ? LIMIT 1");
-    $tStmt->execute([$courseId, $slotId]);
-    $teacherId = $tStmt->fetchColumn();
-    
-    for ($day = 30; $day >= 1; $day -= 2) { // Every other day
+    // 5 days of attendance
+    for ($day = 5; $day >= 1; $day--) {
         $date = date('Y-m-d', strtotime("-$day days"));
         $status = $statuses[array_rand($statuses)];
-        
         try {
             $attendanceStmt->execute([$studentId, $courseId, $slotId, $date, $status, $teacherId]);
             $attendanceCount++;
-        } catch (Exception $e) {
-            // Skip duplicates
-        }
+        } catch(Exception $ex) {}
     }
-}
-echo "✓ $attendanceCount attendance records created\n";
-
-// Mark 3 students as struck off (simulate 3+ absences)
-$struckOffStudents = [$studentIds[14], $studentIds[27], $studentIds[38]];
-foreach ($struckOffStudents as $sId) {
-    $pdo->prepare("UPDATE students SET status='struck_off', struck_off_date=CURDATE(), struck_off_reason='Exceeded 3 absences in a month' WHERE id=?")->execute([$sId]);
-}
-echo "✓ 3 students marked as struck off\n";
-
-// ============================================
-// 7. ASSESSMENTS DATA
-// ============================================
-$assessmentStmt = $pdo->prepare("INSERT INTO assessments (student_id, teacher_id, course_id, date, assessment_type, notes, grade) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$assessmentNotes = [
-    ['daily_progress', 'Student is showing excellent progress in understanding core concepts. Actively participates in class discussions.', 'A'],
-    ['assignment', 'Assignment submitted on time. Code quality is good but needs improvement in error handling.', 'B+'],
-    ['daily_progress', 'Good attendance and punctuality. Needs to focus more on practical exercises.', 'B'],
-    ['general', 'Student has completed the mid-term project successfully. Demonstrated good teamwork skills.', 'A-'],
-    ['assignment', 'Late submission but quality of work is satisfactory. Provided detailed documentation.', 'B-'],
-    ['exam', 'Scored well in the written exam. Practical skills need improvement.', 'B+'],
-    ['daily_progress', 'Excellent lab work performance. Helps fellow students with their queries.', 'A'],
-    ['general', 'Average performance. Recommended additional practice sessions.', 'C+'],
-];
-
-$assessmentCount = 0;
-foreach ($enrollData as $idx => $ed) {
-    if ($idx >= 20) break; // First 20 students
-    $studentId = $ed[0];
-    $courseId = $ed[1];
-    $slotId = $ed[2];
     
-    $tStmt = $pdo->prepare("SELECT teacher_id FROM course_teachers WHERE course_id = ? AND slot_id = ? LIMIT 1");
-    $tStmt->execute([$courseId, $slotId]);
-    $teacherId = $tStmt->fetchColumn();
-    if (!$teacherId) continue;
-    
-    $note = $assessmentNotes[$idx % count($assessmentNotes)];
-    $date = date('Y-m-d', strtotime("-" . ($idx * 3 + 1) . " days"));
-    $assessmentStmt->execute([$studentId, $teacherId, $courseId, $date, $note[0], $note[1], $note[2]]);
+    // 1 assessment
+    $date = date('Y-m-d', strtotime("-1 days"));
+    $assessmentStmt->execute([$studentId, $teacherId, $courseId, $date, 'daily_progress', 'Doing well in the assignments and practical works.', 'A']);
     $assessmentCount++;
 }
+
+echo "✓ $attendanceCount attendance records created\n";
 echo "✓ $assessmentCount assessment records created\n";
 
 // ============================================
-// 8. NOTIFICATIONS
-// ============================================
-$notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)");
-$notifStmt->execute([$userIds[0], 'System Update', 'The LMS system has been updated to version 2.0 with new features.', 'info']);
-$notifStmt->execute([$userIds[0], 'New Enrollment', '5 new students enrolled this week across multiple courses.', 'success']);
-$notifStmt->execute([null, 'Maintenance Scheduled', 'System maintenance scheduled for next Sunday 2 AM - 4 AM.', 'warning']);
-echo "✓ 3 notifications created\n";
-
-// ============================================
-// 9. UPDATE PDF TEMPLATE
+// 8. UPDATE PDF TEMPLATE
 // ============================================
 $pdfTemplate = '
 <div style="max-width: 800px; margin: 0 auto; background: #fff; padding: 40px; font-family: Inter, sans-serif; border-top: 6px solid #0A2540;">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f4f8; padding-bottom: 20px; margin-bottom: 30px;">
         <div>
-            <h1 style="color: #0A2540; margin: 0; font-size: 28px; font-weight: 700;">NATIONAL COLLEGE</h1>
+            <h1 style="color: #0A2540; margin: 0; font-size: 28px; font-weight: 700;">NATIONAL COLLEGE OF TECHNOLOGY</h1>
             <p style="color: #718096; margin: 5px 0 0 0; font-size: 13px; letter-spacing: 1px;">EXCELLENCE IN EDUCATION & LEADERSHIP</p>
         </div>
         <div style="text-align: right;">
@@ -343,16 +274,26 @@ $pdfTemplate = '
         </div>
     </div>
     <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #a0aec0;">
-        National College LMS &bull; Generated on {enrollment_date}
+        National College of Technology LMS &bull; Generated on {enrollment_date}
     </div>
 </div>';
 
 $pdo->prepare("UPDATE pdf_templates SET content = ? WHERE name = 'admission_form'")->execute([$pdfTemplate]);
+
+$pdo->prepare("UPDATE pdf_settings SET 
+    college_name='National College of Technology', 
+    college_address='National Building Near UBL Bank University Road Sargodha',
+    college_phone='0316-7772003 | 0316-7772004 | 00 92 048 3212277',
+    college_email='ncet.sgd@gmail.com',
+    footer_text='Generated by National College LMS',
+    watermark_text='NATIONAL COLLEGE OF TECHNOLOGY'
+")->execute();
+
 echo "✓ PDF template updated\n";
 
 echo "\n=== Database seeded successfully! ===\n";
 echo "\nDemo Credentials:\n";
 echo "  Admin:        admin@national.edu / admin123\n";
-echo "  Teacher:      ahmad@national.edu / teacher123\n";
-echo "  Receptionist: reception@national.edu / reception123\n";
+echo "  Teacher:      asad@national.edu / teacher123\n";
+echo "  Receptionist: zeenia@national.edu / reception123\n";
 ?>
