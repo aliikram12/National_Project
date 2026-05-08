@@ -125,9 +125,13 @@ if (isset($_GET['export']) && !empty($results)) {
         $title = ucfirst($reportType) . " Report";
         $pdf->Cell(0, 10, $title, 0, 1, 'C');
         
+        // Generated Date
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->Cell(0, 6, "Generated Date: " . date('d-M-Y h:i A'), 0, 1, 'C');
+        
         if (!in_array($reportType, ['courses', 'slots'])) {
             $pdf->SetFont('helvetica', '', 10);
-            $pdf->Cell(0, 8, "Period: " . formatDate($dateFrom) . " to " . formatDate($dateTo), 0, 1, 'C');
+            $pdf->Cell(0, 6, "Period: " . formatDate($dateFrom) . " to " . formatDate($dateTo), 0, 1, 'C');
         }
         
         if ($courseId || $slotId || $teacherId || $status || $studentName) {

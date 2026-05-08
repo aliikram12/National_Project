@@ -44,34 +44,27 @@ class NationalCollegePDF extends TCPDF {
     }
 
     public function Header() {
-        // Logo
-        if ($this->settings['show_logo'] && !empty($this->settings['college_logo']) && file_exists(__DIR__ . '/../assets/img/' . $this->settings['college_logo'])) {
-            $this->Image(__DIR__ . '/../assets/img/' . $this->settings['college_logo'], 15, 10, 0, 20, '', '', 'T', false, 300, '', false, false, 0, false, false, false);
-            $left_margin = 40;
-        } else {
-            $left_margin = 15;
-        }
-
         // Header Text
-        $this->SetY(10);
+        $this->SetY(12);
         
-        // Convert hex color to RGB
-        list($r, $g, $b) = sscanf($this->settings['header_color'], "#%02x%02x%02x");
-        $this->SetTextColor($r, $g, $b);
+        // Deep navy blue color
+        $this->SetTextColor(10, 22, 40);
         
-        $this->SetFont('helvetica', 'B', 20);
-        $this->Cell(0, 8, $this->settings['college_name'], 0, 1, 'C');
+        $this->SetFont('helvetica', 'B', 22);
+        $this->Cell(0, 10, 'NATIONAL COLLEGE OF TECHNOLOGY', 0, 1, 'C');
         
-        $this->SetFont('helvetica', '', 10);
-        $this->SetTextColor(100, 100, 100);
-        $this->Cell(0, 5, $this->settings['college_address'], 0, 1, 'C');
-        $this->Cell(0, 5, $this->settings['college_email'], 0, 1, 'C');
-        $this->Cell(0, 5, str_replace(' | ', ' | ', $this->settings['college_phone']), 0, 1, 'C');
+        $this->SetFont('helvetica', '', 11);
+        $this->SetTextColor(80, 80, 80);
+        $this->Cell(0, 6, 'National Building Near UBL Bank University Road Sargodha', 0, 1, 'C');
+        $this->Cell(0, 6, 'ncet.sgd@gmail.com', 0, 1, 'C');
+        $this->Cell(0, 6, '0316-7772003 | 0316-7772004', 0, 1, 'C');
         
-        // Line break
-        $this->SetY(35);
-        $this->SetDrawColor(200, 200, 200);
-        $this->Line(15, 32, $this->getPageWidth() - 15, 32);
+        // Line break and bottom border
+        $this->SetY(42);
+        $this->SetDrawColor(10, 22, 40);
+        $this->SetLineWidth(0.6);
+        $this->Line(15, 39, $this->getPageWidth() - 15, 39);
+        $this->SetLineWidth(0.2); // reset line width
         
         // Watermark
         if ($this->settings['show_watermark'] && !empty($this->settings['watermark_text'])) {
