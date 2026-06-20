@@ -56,8 +56,10 @@
                 <?php elseif ($_SESSION['user_role'] === 'receptionist'): ?>
                     <div class="nav-label">Main</div>
                     <a href="index.php" class="<?php echo $current_page == 'index.php' ? 'active' : ''; ?>"><i class="fas fa-home"></i> Dashboard</a>
-                    <div class="nav-label">Actions</div>
-                    <a href="admissions.php" class="<?php echo $current_page == 'admissions.php' ? 'active' : ''; ?>"><i class="fas fa-user-plus"></i> New Admission</a>
+                    <div class="nav-label">Admissions</div>
+                    <a href="admissions.php" class="<?php echo $current_page == 'admissions.php' ? 'active' : ''; ?>"><i class="fas fa-user-plus"></i> All Admissions</a>
+                    <a href="admission_form.php" class="<?php echo $current_page == 'admission_form.php' ? 'active' : ''; ?>"><i class="fas fa-file-signature"></i> New Admission</a>
+                    <div class="nav-label">Management</div>
                     <a href="students.php" class="<?php echo $current_page == 'students.php' ? 'active' : ''; ?>"><i class="fas fa-users"></i> Students</a>
                     <a href="reports.php" class="<?php echo $current_page == 'reports.php' ? 'active' : ''; ?>"><i class="fas fa-file-alt"></i> Reports</a>
                 <?php endif; ?>

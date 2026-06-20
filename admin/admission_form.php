@@ -596,8 +596,7 @@ $(document).ready(function(){
     $('.searchable').select2({
         placeholder: 'Select an option...',
         allowClear: true,
-        width: '100%',
-        theme: "bootstrap-5"
+        width: '100%'
     });
 });
 
