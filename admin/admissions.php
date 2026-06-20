@@ -5,6 +5,7 @@
  */
 
 require __DIR__ . '/../config/db.php';
+@include __DIR__ . '/../database/run_migrations.php'; // Temporary auto-migrate
 
 $user = getCurrentUser($pdo);
 if (!$user || !in_array($user['role'], ['admin', 'receptionist'])) {
