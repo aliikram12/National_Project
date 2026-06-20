@@ -201,6 +201,16 @@ function getUnreadNotificationCount($pdo, $userId = null) {
     return $stmt->fetchColumn();
 }
 
+function isAjaxRequest() {
+    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+}
+
+function jsonResponse($data) {
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
 // ============================================
 // Pagination Helper
 // ============================================

@@ -10,6 +10,8 @@ USE national_college;
 -- ============================================
 -- 1. USERS TABLE
 -- ============================================
+
+
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -41,7 +43,7 @@ CREATE TABLE departments (
 -- ============================================
 -- 2. COURSES TABLE
 -- ============================================
-CREATE TABLE courses (
+CREATE TABLE courses ( 
     id INT AUTO_INCREMENT PRIMARY KEY,
     code VARCHAR(20) NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
@@ -64,15 +66,43 @@ CREATE TABLE courses (
 CREATE TABLE slots (
     id INT AUTO_INCREMENT PRIMARY KEY,
     time_range VARCHAR(50) NOT NULL,
+    duration VARCHAR(50) NULL,
     status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_status (status)
 ) ENGINE=InnoDB;
 
-INSERT INTO slots (time_range) VALUES 
-('8:00 AM - 10:00 AM'),
-('10:00 AM - 12:00 PM'),
-('12:00 PM - 2:00 PM'),
-('2:30 PM - 4:30 PM');
+INSERT INTO slots (time_range, duration) VALUES 
+('08:00 AM - 09:00 AM', '1 Hour'),
+('09:00 AM - 10:00 AM', '1 Hour'),
+('10:00 AM - 11:00 AM', '1 Hour'),
+('02:00 PM - 03:00 PM', '1 Hour'),
+('03:00 PM - 04:00 PM', '1 Hour');
+
+-- ============================================
+-- 3b. FEE_PACKAGES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS fee_packages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NULL,
+    total_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    discount_percent DECIMAL(5,2) DEFAULT 0.00,
+    discount_amount DECIMAL(10,2) DEFAULT 0.00,
+    duration_months INT DEFAULT 3,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_status (status)
+) ENGINE=InnoDB;
+
+INSERT INTO fee_packages (name, description, total_fee, discount_percent, discount_amount, duration_months) VALUES
+('Standard Package', 'Regular admission package with standard fees', 25000, 0, 0, 3),
+('Discount Package', '10% discount on standard fee', 22500, 10, 0, 3),
+('Scholarship Package', '25% scholarship discount', 18750, 25, 0, 3),
+('Special Package', 'Custom special fee arrangement', 20000, 0, 2000, 3),
+('Weekend Package', 'Weekend batch with special schedule', 30000, 0, 0, 3);
 
 -- ============================================
 -- 4. STUDENTS TABLE
@@ -95,6 +125,55 @@ CREATE TABLE students (
     INDEX idx_name (name),
     INDEX idx_contact (contact),
     INDEX idx_created (created_at)
+) ENGINE=InnoDB;
+
+-- ============================================
+-- 4b. ADMISSIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS admissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    registration_number VARCHAR(50) NOT NULL UNIQUE,
+    course_id INT NOT NULL,
+    date_of_admission DATE NOT NULL,
+    duration VARCHAR(50) NOT NULL,
+    degree_type ENUM('Private', 'Government') DEFAULT 'Private',
+    session_start ENUM('January','February','March','April','May','June','July','August','September','October','November','December') NOT NULL,
+    session_end ENUM('January','February','March','April','May','June','July','August','September','October','November','December') NOT NULL,
+    time_slot_id INT NOT NULL,
+    fee_package_id INT NULL,
+    student_photo VARCHAR(255) DEFAULT NULL,
+    sr_number VARCHAR(50) DEFAULT NULL,
+    student_name VARCHAR(100) NOT NULL,
+    father_name VARCHAR(100) NOT NULL,
+    gender ENUM('Male', 'Female', 'Other') DEFAULT 'Male',
+    date_of_birth DATE NOT NULL,
+    nationality VARCHAR(50) DEFAULT 'Pakistani',
+    cnic VARCHAR(20) NOT NULL,
+    mailing_address TEXT NOT NULL,
+    permanent_address TEXT NOT NULL,
+    student_mobile VARCHAR(20) NOT NULL,
+    guardian_mobile VARCHAR(20) NOT NULL,
+    student_email VARCHAR(100) NULL,
+    guardian_email VARCHAR(100) NULL,
+    occupation VARCHAR(100) NULL,
+    monthly_income DECIMAL(12,2) NULL,
+    status ENUM('active', 'completed', 'dropped', 'transferred') DEFAULT 'active',
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE RESTRICT,
+    FOREIGN KEY (time_slot_id) REFERENCES slots(id) ON DELETE RESTRICT,
+    FOREIGN KEY (fee_package_id) REFERENCES fee_packages(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT,
+    INDEX idx_registration (registration_number),
+    INDEX idx_course (course_id),
+    INDEX idx_student_name (student_name),
+    INDEX idx_father_name (father_name),
+    INDEX idx_cnic (cnic),
+    INDEX idx_mobile (student_mobile),
+    INDEX idx_time_slot (time_slot_id),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB;
 
 -- ============================================
