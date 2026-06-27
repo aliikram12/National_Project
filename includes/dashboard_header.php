@@ -38,7 +38,6 @@
                     <a href="admission_form.php" class="<?php echo $current_page == 'admission_form.php' ? 'active' : ''; ?>"><i class="fas fa-file-signature"></i> New Admission</a>
                     <div class="nav-label">Management</div>
                     <a href="users.php" class="<?php echo $current_page == 'users.php' ? 'active' : ''; ?>"><i class="fas fa-user-shield"></i> Users</a>
-                    <a href="students.php" class="<?php echo $current_page == 'students.php' ? 'active' : ''; ?>"><i class="fas fa-user-graduate"></i> Students</a>
                     <a href="courses.php" class="<?php echo $current_page == 'courses.php' ? 'active' : ''; ?>"><i class="fas fa-book-open"></i> Courses</a>
                     <a href="slots.php" class="<?php echo $current_page == 'slots.php' ? 'active' : ''; ?>"><i class="fas fa-clock"></i> Time Slots</a>
                     <a href="fee_packages.php" class="<?php echo $current_page == 'fee_packages.php' ? 'active' : ''; ?>"><i class="fas fa-tags"></i> Fee Packages</a>
@@ -61,7 +60,6 @@
                     <a href="admissions.php" class="<?php echo $current_page == 'admissions.php' ? 'active' : ''; ?>"><i class="fas fa-user-plus"></i> All Admissions</a>
                     <a href="admission_form.php" class="<?php echo $current_page == 'admission_form.php' ? 'active' : ''; ?>"><i class="fas fa-file-signature"></i> New Admission</a>
                     <div class="nav-label">Management</div>
-                    <a href="students.php" class="<?php echo $current_page == 'students.php' ? 'active' : ''; ?>"><i class="fas fa-users"></i> Students</a>
                     <a href="reports.php" class="<?php echo $current_page == 'reports.php' ? 'active' : ''; ?>"><i class="fas fa-file-alt"></i> Reports</a>
                 <?php endif; ?>
             </div>

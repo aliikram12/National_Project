@@ -24,11 +24,11 @@ $query = "SELECT s.id, s.name, s.contact, c.name as course, sl.time_range as slo
 $params[] = $dateFrom;
 $params[] = $dateTo;
 
-if ($courseId) { $query .= " AND e.course_id = ?"; $params[] = $courseId; }
-if ($slotId) { $query .= " AND e.slot_id = ?"; $params[] = $slotId; }
+if ($courseId) { $query .= " AND s.course_id = ?"; $params[] = $courseId; }
+if ($slotId) { $query .= " AND s.time_slot_id = ?"; $params[] = $slotId; }
 if ($status) { $query .= " AND s.status = ?"; $params[] = $status; }
 
-$query .= " ORDER BY e.enrollment_date DESC";
+$query .= " ORDER BY s.date_of_admission DESC";
 
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);

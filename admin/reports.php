@@ -22,26 +22,25 @@ $params = [];
 $query = "";
 
 if ($reportType === 'admissions') {
-    $query = "SELECT s.id, s.name, s.father_name, s.contact, c.name as course, sl.time_range as slot, e.enrollment_date, s.status 
-              FROM students s 
-              JOIN enrollments e ON s.id=e.student_id 
-              JOIN courses c ON e.course_id=c.id 
-              JOIN slots sl ON e.slot_id=sl.id 
-              WHERE e.enrollment_date BETWEEN ? AND ?";
+    $query = "SELECT s.id, s.student_name as name, s.father_name, s.student_mobile as contact, c.name as course, sl.time_range as slot, s.date_of_admission as enrollment_date, s.status 
+              FROM admissions s 
+              JOIN courses c ON s.course_id=c.id 
+              JOIN slots sl ON s.time_slot_id=sl.id 
+              WHERE s.date_of_admission BETWEEN ? AND ?";
     $params[] = $dateFrom;
     $params[] = $dateTo;
     
-    if ($courseId) { $query .= " AND e.course_id = ?"; $params[] = $courseId; }
-    if ($slotId) { $query .= " AND e.slot_id = ?"; $params[] = $slotId; }
+    if ($courseId) { $query .= " AND s.course_id = ?"; $params[] = $courseId; }
+    if ($slotId) { $query .= " AND s.time_slot_id = ?"; $params[] = $slotId; }
     if ($status) { $query .= " AND s.status = ?"; $params[] = $status; }
-    if ($studentName) { $query .= " AND s.name LIKE ?"; $params[] = "%$studentName%"; }
+    if ($studentName) { $query .= " AND s.student_name LIKE ?"; $params[] = "%$studentName%"; }
     
-    $query .= " ORDER BY e.enrollment_date DESC";
+    $query .= " ORDER BY s.date_of_admission DESC";
     
 } elseif ($reportType === 'attendance') {
-    $query = "SELECT s.name as student, c.name as course, sl.time_range as slot, a.date, a.status, u.name as marked_by 
+    $query = "SELECT s.student_name as student, c.name as course, sl.time_range as slot, a.date, a.status, u.name as marked_by 
               FROM attendance a 
-              JOIN students s ON a.student_id=s.id 
+              JOIN admissions s ON a.student_id=s.id 
               JOIN courses c ON a.course_id=c.id 
               JOIN slots sl ON a.slot_id=sl.id
               LEFT JOIN users u ON a.marked_by=u.id
@@ -53,14 +52,14 @@ if ($reportType === 'admissions') {
     if ($slotId) { $query .= " AND a.slot_id = ?"; $params[] = $slotId; }
     if ($teacherId) { $query .= " AND a.marked_by = ?"; $params[] = $teacherId; }
     if ($status) { $query .= " AND a.status = ?"; $params[] = $status; }
-    if ($studentName) { $query .= " AND s.name LIKE ?"; $params[] = "%$studentName%"; }
+    if ($studentName) { $query .= " AND s.student_name LIKE ?"; $params[] = "%$studentName%"; }
     
-    $query .= " ORDER BY a.date DESC, s.name ASC";
+    $query .= " ORDER BY a.date DESC, s.student_name ASC";
 
 } elseif ($reportType === 'assessments') {
-    $query = "SELECT s.name as student, u.name as teacher, c.name as course, a.date, a.assessment_type, a.grade, a.notes 
+    $query = "SELECT s.student_name as student, u.name as teacher, c.name as course, a.date, a.assessment_type, a.grade, a.notes 
               FROM assessments a 
-              JOIN students s ON a.student_id=s.id 
+              JOIN admissions s ON a.student_id=s.id 
               JOIN users u ON a.teacher_id=u.id 
               JOIN courses c ON a.course_id=c.id 
               WHERE a.date BETWEEN ? AND ?";
@@ -69,7 +68,7 @@ if ($reportType === 'admissions') {
     
     if ($courseId) { $query .= " AND a.course_id = ?"; $params[] = $courseId; }
     if ($teacherId) { $query .= " AND a.teacher_id = ?"; $params[] = $teacherId; }
-    if ($studentName) { $query .= " AND s.name LIKE ?"; $params[] = "%$studentName%"; }
+    if ($studentName) { $query .= " AND s.student_name LIKE ?"; $params[] = "%$studentName%"; }
     
     $query .= " ORDER BY a.date DESC";
 

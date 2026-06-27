@@ -21,9 +21,9 @@ $params = [];
 $query = "";
 
 if ($reportType === 'attendance') {
-    $query = "SELECT s.name as student, c.name as course, a.date, a.status 
+    $query = "SELECT s.student_name as student, c.name as course, a.date, a.status 
               FROM attendance a 
-              JOIN students s ON a.student_id=s.id 
+              JOIN admissions s ON a.student_id=s.id 
               JOIN courses c ON a.course_id=c.id 
               WHERE a.marked_by = ? AND a.date BETWEEN ? AND ?";
     $params[] = $teacher_id;
@@ -33,12 +33,12 @@ if ($reportType === 'attendance') {
     if ($courseId) { $query .= " AND a.course_id = ?"; $params[] = $courseId; }
     if ($status) { $query .= " AND a.status = ?"; $params[] = $status; }
     
-    $query .= " ORDER BY a.date DESC, s.name ASC";
+    $query .= " ORDER BY a.date DESC, s.student_name ASC";
 
 } elseif ($reportType === 'assessments') {
-    $query = "SELECT s.name as student, c.name as course, a.date, a.assessment_type, a.grade, a.notes 
+    $query = "SELECT s.student_name as student, c.name as course, a.date, a.assessment_type, a.grade, a.notes 
               FROM assessments a 
-              JOIN students s ON a.student_id=s.id 
+              JOIN admissions s ON a.student_id=s.id 
               JOIN courses c ON a.course_id=c.id 
               WHERE a.teacher_id = ? AND a.date BETWEEN ? AND ?";
     $params[] = $teacher_id;

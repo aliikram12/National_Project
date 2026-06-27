@@ -8,7 +8,13 @@ $slot_id = $_GET['slot_id'] ?? null;
 
 // Show class selection if no params
 if (!$course_id || !$slot_id) {
-    $classes = $pdo->prepare("SELECT c.id as course_id, c.name, s.id as slot_id, s.time_range FROM course_teachers ct JOIN courses c ON ct.course_id=c.id JOIN slots s ON ct.slot_id=s.id WHERE ct.teacher_id=?");
+    $classes = $pdo->prepare("SELECT c.id as course_id, c.name, s.id as slot_id, s.time_range 
+                              FROM course_teachers ct 
+                              JOIN courses c ON ct.course_id=c.id 
+                              JOIN admissions a ON a.course_id=c.id 
+                              JOIN slots s ON a.time_slot_id=s.id 
+                              WHERE ct.teacher_id=? AND a.status='active' 
+                              GROUP BY c.id, s.id");
     $classes->execute([$teacher_id]);
     $classList = $classes->fetchAll();
     
@@ -40,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
     }
 }
 
-$students = $pdo->prepare("SELECT s.id, s.name FROM students s JOIN enrollments e ON s.id=e.student_id WHERE e.course_id=? AND e.slot_id=?");
+$students = $pdo->prepare("SELECT a.id, a.student_name as name FROM admissions a WHERE a.course_id=? AND a.time_slot_id=? AND a.status='active'");
 $students->execute([$course_id, $slot_id]);
 $students = $students->fetchAll();
 
@@ -49,7 +55,7 @@ if ($students) {
     $ids = array_column($students, 'id');
     $ph = implode(',', array_fill(0, count($ids), '?'));
     $params = array_merge($ids, [$teacher_id, $course_id]);
-    $aStmt = $pdo->prepare("SELECT a.*, s.name as student_name FROM assessments a JOIN students s ON a.student_id=s.id WHERE a.student_id IN ($ph) AND a.teacher_id=? AND a.course_id=? ORDER BY a.date DESC LIMIT 20");
+    $aStmt = $pdo->prepare("SELECT a.*, adm.student_name FROM assessments a JOIN admissions adm ON a.student_id=adm.id WHERE a.student_id IN ($ph) AND a.teacher_id=? AND a.course_id=? ORDER BY a.date DESC LIMIT 20");
     $aStmt->execute($params);
     $assessments = $aStmt->fetchAll();
 }

@@ -9,7 +9,13 @@ $date = $_GET['date'] ?? date('Y-m-d');
 
 // If no course/slot, show selection
 if (!$course_id || !$slot_id) {
-    $classes = $pdo->prepare("SELECT c.id as course_id, c.name, s.id as slot_id, s.time_range FROM course_teachers ct JOIN courses c ON ct.course_id=c.id JOIN slots s ON ct.slot_id=s.id WHERE ct.teacher_id=?");
+    $classes = $pdo->prepare("SELECT c.id as course_id, c.name, s.id as slot_id, s.time_range 
+                              FROM course_teachers ct 
+                              JOIN courses c ON ct.course_id=c.id 
+                              JOIN admissions a ON a.course_id=c.id 
+                              JOIN slots s ON a.time_slot_id=s.id 
+                              WHERE ct.teacher_id=? AND a.status='active' 
+                              GROUP BY c.id, s.id");
     $classes->execute([$teacher_id]);
     $classList = $classes->fetchAll();
     
@@ -53,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
                     $absCount = $pdo->prepare("SELECT COUNT(*) FROM attendance WHERE student_id=? AND status='absent' AND date BETWEEN ? AND ?");
                     $absCount->execute([$student_id, $monthStart, $monthEnd]);
                     if ($absCount->fetchColumn() >= 3) {
-                        $pdo->prepare("UPDATE students SET status='struck_off', struck_off_date=CURDATE(), struck_off_reason='3+ absences in ".date('F Y',strtotime($date))."' WHERE id=? AND status='active'")->execute([$student_id]);
+                        $pdo->prepare("UPDATE admissions SET status='dropped' WHERE id=? AND status='active'")->execute([$student_id]);
                     }
                 }
             }
@@ -67,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
     }
 }
 
-$students = $pdo->prepare("SELECT s.id, s.name, s.status, s.contact FROM students s JOIN enrollments e ON s.id=e.student_id WHERE e.course_id=? AND e.slot_id=?");
+$students = $pdo->prepare("SELECT a.id, a.student_name as name, a.status, a.student_mobile as contact FROM admissions a WHERE a.course_id=? AND a.time_slot_id=?");
 $students->execute([$course_id, $slot_id]);
 $students = $students->fetchAll();
 

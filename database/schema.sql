@@ -183,7 +183,7 @@ CREATE TABLE IF NOT EXISTS attendance (
     status ENUM('present', 'absent', 'leave') NOT NULL,
     marked_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES admissions(id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     FOREIGN KEY (slot_id) REFERENCES slots(id) ON DELETE CASCADE,
     FOREIGN KEY (marked_by) REFERENCES users(id) ON DELETE CASCADE,
@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS assessments (
     notes TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES admissions(id) ON DELETE CASCADE,
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_date (date)
