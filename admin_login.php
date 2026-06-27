@@ -15,17 +15,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     } else {
         $email = sanitizeInput($_POST['email'] ?? '');
         $password = $_POST['password'] ?? '';
-        $role = sanitizeInput($_POST['role'] ?? '');
+        $role = 'admin'; // Hardcoded for this page
 
         if (!validateEmail($email)) {
             $error = "Please enter a valid email address.";
         } elseif (empty($password)) {
             $error = "Password is required.";
-        } elseif (!in_array($role, ['teacher', 'receptionist'])) {
-            $error = "Invalid role selected.";
         } else {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = ? AND status = 'active'");
-            $stmt->execute([$email, $role]);
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = 'admin' AND status = 'active'");
+            $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
@@ -43,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     ->execute([$user['id'], $ip_address, $user_agent]);
                 $_SESSION['login_history_id'] = $pdo->lastInsertId();
 
-                redirect($user['role'] . '/index.php');
+                redirect('admin/index.php');
             } else {
                 $error = "Invalid credentials or account inactive.";
             }
@@ -56,13 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Login | National College</title>
+    <title>Admin Login | National College</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         body {
-            background-color: var(--gray-50);
+            background-color: #0f172a; /* Dark background for admin */
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             background: #fff;
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
             width: 100%;
             max-width: 420px;
         }
@@ -84,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         }
         .login-header .icon {
             font-size: 48px;
-            color: var(--royal);
+            color: var(--navy);
             margin-bottom: 16px;
         }
         .login-header h2 {
@@ -96,28 +95,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             font-size: 14px;
             margin: 0;
         }
-        .role-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-        .role-tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            background: var(--gray-100);
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-            color: var(--gray-600);
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-        .role-tab.active {
+        .admin-badge {
+            display: inline-block;
             background: #eff6ff;
             color: var(--royal);
-            border-color: #bfdbfe;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            border: 1px solid #bfdbfe;
         }
         .form-group {
             margin-bottom: 20px;
@@ -138,14 +125,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             transition: all 0.2s;
         }
         .form-control:focus {
-            border-color: var(--royal);
+            border-color: var(--navy);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
         }
         .btn-login {
             width: 100%;
             padding: 12px;
-            background: var(--royal);
+            background: var(--navy);
             color: #fff;
             border: none;
             border-radius: 8px;
@@ -155,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             transition: all 0.2s;
         }
         .btn-login:hover {
-            background: #1d4ed8;
+            background: #0f172a;
         }
         .alert {
             padding: 12px 16px;
@@ -174,32 +161,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
 <div class="login-wrapper">
     <div class="login-header">
-        <div class="icon"><i class="fas fa-graduation-cap"></i></div>
+        <div class="icon"><i class="fas fa-shield-alt"></i></div>
+        <div class="admin-badge">Admin Portal</div>
         <h2>National College</h2>
-        <p>Staff Portal Login</p>
+        <p>Secure Administrator Login</p>
     </div>
 
     <?php if ($error): ?>
         <div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> <?php echo e($error); ?></div>
     <?php endif; ?>
 
-    <div class="role-tabs">
-        <div class="role-tab active" onclick="selectRole('teacher', this)">
-            <i class="fas fa-chalkboard-teacher"></i> Teacher
-        </div>
-        <div class="role-tab" onclick="selectRole('receptionist', this)">
-            <i class="fas fa-concierge-bell"></i> Receptionist
-        </div>
-    </div>
-
     <form method="POST">
         <?php csrfField(); ?>
         <input type="hidden" name="login" value="1">
-        <input type="hidden" name="role" id="roleInput" value="teacher">
         
         <div class="form-group">
-            <label><i class="fas fa-envelope"></i> Email Address</label>
-            <input type="email" name="email" class="form-control" required placeholder="Enter your email">
+            <label><i class="fas fa-envelope"></i> Administrator Email</label>
+            <input type="email" name="email" class="form-control" required placeholder="Enter admin email">
         </div>
         
         <div class="form-group">
@@ -207,17 +185,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             <input type="password" name="password" class="form-control" required placeholder="Enter your password">
         </div>
         
-        <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+        <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Secure Login</button>
     </form>
 </div>
-
-<script>
-function selectRole(role, element) {
-    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
-    element.classList.add('active');
-    document.getElementById('roleInput').value = role;
-}
-</script>
 
 </body>
 </html>
