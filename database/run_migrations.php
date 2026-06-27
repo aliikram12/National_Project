@@ -70,6 +70,7 @@ try {
             date_of_birth DATE NOT NULL,
             nationality VARCHAR(50) DEFAULT 'Pakistani',
             cnic VARCHAR(20) NOT NULL,
+            education_level VARCHAR(50) DEFAULT NULL,
             mailing_address TEXT NOT NULL,
             permanent_address TEXT NOT NULL,
             student_mobile VARCHAR(20) NOT NULL,
@@ -104,6 +105,7 @@ try {
             'date_of_birth' => "DATE NOT NULL",
             'nationality' => "VARCHAR(50) DEFAULT 'Pakistani'",
             'cnic' => "VARCHAR(20) NOT NULL",
+            'education_level' => "VARCHAR(50) DEFAULT NULL",
             'mailing_address' => "TEXT NOT NULL",
             'permanent_address' => "TEXT NOT NULL",
             'student_mobile' => "VARCHAR(20) NOT NULL",
@@ -123,6 +125,18 @@ try {
         try { $pdo->exec("ALTER TABLE admissions RENAME COLUMN program_id TO course_id"); } catch (PDOException $e) {}
         echo "Admissions table updated.\n";
     }
+
+    // 5. LOGIN HISTORY TABLE
+    $pdo->exec("CREATE TABLE IF NOT EXISTS login_history (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        login_time DATETIME NOT NULL,
+        logout_time DATETIME NULL,
+        ip_address VARCHAR(45) NULL,
+        user_agent TEXT NULL,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB");
+    echo "Login history table ensured.\n";
 
     echo "Migration completed successfully!";
 } catch (PDOException $e) {

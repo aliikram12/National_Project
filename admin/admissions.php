@@ -74,6 +74,20 @@ $statActive = $pdo->query("SELECT COUNT(*) FROM admissions WHERE status='active'
 $statCompleted = $pdo->query("SELECT COUNT(*) FROM admissions WHERE status='completed'")->fetchColumn();
 $statThisMonth = $pdo->query("SELECT COUNT(*) FROM admissions WHERE MONTH(created_at)=MONTH(CURDATE()) AND YEAR(created_at)=YEAR(CURDATE())")->fetchColumn();
 
+// Fetch course-wise stats
+$courseStats = $pdo->query("
+    SELECT 
+        c.name, 
+        COUNT(a.id) as total_admissions,
+        SUM(CASE WHEN a.status = 'active' THEN 1 ELSE 0 END) as active_admissions,
+        SUM(CASE WHEN a.status = 'completed' THEN 1 ELSE 0 END) as completed_admissions
+    FROM courses c
+    LEFT JOIN admissions a ON c.id = a.course_id
+    WHERE c.status = 'active'
+    GROUP BY c.id
+    ORDER BY c.name
+")->fetchAll();
+
 $pageTitle = 'Admission Management';
 ?>
 <?php include __DIR__ . '/../includes/dashboard_header.php'; ?>
@@ -81,6 +95,7 @@ $pageTitle = 'Admission Management';
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
 <link rel="stylesheet" href="../assets/css/admission.css">
 
+<!-- Overall Stats -->
 <div class="admission-stats-grid">
     <div class="admission-stat-card">
         <div class="stat-icon-box green"><i class="fas fa-file-alt"></i></div>
@@ -98,6 +113,29 @@ $pageTitle = 'Admission Management';
         <div class="stat-icon-box orange"><i class="fas fa-calendar"></i></div>
         <div class="stat-text"><h4><?php echo number_format($statThisMonth); ?></h4><span>This Month</span></div>
     </div>
+</div>
+
+<!-- Course Wise Stats -->
+<h4 style="margin-bottom: 16px; color: var(--navy); font-weight: 700;">Course Wise Admissions</h4>
+<div class="admission-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    <?php foreach($courseStats as $cStat): 
+        $active = (int)$cStat['active_admissions'];
+        $total = (int)$cStat['total_admissions'];
+    ?>
+    <div class="admission-stat-card" style="padding: 18px;">
+        <div class="stat-icon-box blue" style="width: 42px; height: 42px; font-size: 16px;"><i class="fas fa-book"></i></div>
+        <div class="stat-text" style="flex: 1;">
+            <h5 style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--navy);"><?php echo e($cStat['name']); ?></h5>
+            <div style="display: flex; gap: 12px; font-size: 12px; color: var(--gray-500);">
+                <span><strong><?php echo $total; ?></strong> Total</span>
+                <span style="color: var(--royal);"><strong><?php echo $active; ?></strong> Active</span>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+    <?php if(empty($courseStats)): ?>
+        <p style="color: var(--gray-500);">No active courses found.</p>
+    <?php endif; ?>
 </div>
 
 <div class="admission-search-bar">

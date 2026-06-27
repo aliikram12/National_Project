@@ -44,6 +44,7 @@
                     <a href="fee_packages.php" class="<?php echo $current_page == 'fee_packages.php' ? 'active' : ''; ?>"><i class="fas fa-tags"></i> Fee Packages</a>
                     <div class="nav-label">Reports</div>
                     <a href="reports.php" class="<?php echo $current_page == 'reports.php' ? 'active' : ''; ?>"><i class="fas fa-file-export"></i> Reports & Export</a>
+                    <a href="login_history.php" class="<?php echo $current_page == 'login_history.php' ? 'active' : ''; ?>"><i class="fas fa-history"></i> Login History</a>
 
                 <?php elseif ($_SESSION['user_role'] === 'teacher'): ?>
                     <div class="nav-label">Main</div>

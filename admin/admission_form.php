@@ -100,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
                 ':occupation' => !empty($_POST['occupation']) ? sanitizeInput($_POST['occupation']) : null,
                 ':monthly_income' => !empty($_POST['monthly_income']) ? (float)$_POST['monthly_income'] : null,
                 ':status' => sanitizeInput($_POST['status'] ?? 'active'),
+                ':education_level' => sanitizeInput($_POST['education_level'] ?? ''),
             ];
 
             try {
@@ -118,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
                             student_mobile=:student_mobile, guardian_mobile=:guardian_mobile,
                             student_email=:student_email, guardian_email=:guardian_email,
                             occupation=:occupation, monthly_income=:monthly_income,
-                            status=:status, updated_at=NOW() WHERE id=:id";
+                            status=:status, education_level=:education_level, updated_at=NOW() WHERE id=:id";
                     $pdo->prepare($sql)->execute($data);
                     setFlash('success', 'Admission record updated successfully.');
                 } else {
@@ -129,14 +130,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
                             student_name, father_name, gender, date_of_birth, nationality, cnic,
                             mailing_address, permanent_address, student_mobile, guardian_mobile,
                             student_email, guardian_email, occupation, monthly_income,
-                            status, created_by) VALUES (
+                            status, education_level, created_by) VALUES (
                             :registration_number, :student_photo, :sr_number,
                             :course_id, :date_of_admission, :duration, :degree_type,
                             :session_start, :session_end, :time_slot_id, :fee_package_id,
                             :student_name, :father_name, :gender, :date_of_birth, :nationality, :cnic,
                             :mailing_address, :permanent_address, :student_mobile, :guardian_mobile,
                             :student_email, :guardian_email, :occupation, :monthly_income,
-                            :status, :created_by)";
+                            :status, :education_level, :created_by)";
                     $pdo->prepare($sql)->execute($data);
                     setFlash('success', 'Admission created successfully.');
                 }
@@ -449,6 +450,29 @@ function renderForm($admission, $isEdit, $editId, $courses, $slots, $feePackages
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">CNIC Number <span class="text-danger">*</span></label>
                                 <input type="text" name="cnic" class="form-control" value="<?php echo e($admission['cnic'] ?? ''); ?>" required placeholder="35202-1234567-1" maxlength="15" pattern="[0-9]{5}-[0-9]{7}-[0-9]{1}" title="Format: XXXXX-XXXXXXX-X">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== SECTION 3: EDUCATION INFORMATION ===== -->
+                <div class="admission-section mt-4">
+                    <div class="admission-section-header">
+                        <div class="section-icon"><i class="fas fa-graduation-cap"></i></div>
+                        <h4>Education Information</h4>
+                    </div>
+                    <div class="admission-section-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Education Level <span class="text-danger">*</span></label>
+                                <select name="education_level" class="form-select searchable" required>
+                                    <option value="">— Select Education Level —</option>
+                                    <option value="Metric" <?php echo ($admission['education_level'] ?? '') === 'Metric' ? 'selected' : ''; ?>>Metric / O-Level</option>
+                                    <option value="Inter" <?php echo ($admission['education_level'] ?? '') === 'Inter' ? 'selected' : ''; ?>>Intermediate / A-Level</option>
+                                    <option value="Bachelor" <?php echo ($admission['education_level'] ?? '') === 'Bachelor' ? 'selected' : ''; ?>>Bachelor</option>
+                                    <option value="Master" <?php echo ($admission['education_level'] ?? '') === 'Master' ? 'selected' : ''; ?>>Master</option>
+                                    <option value="Other" <?php echo ($admission['education_level'] ?? '') === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                </select>
                             </div>
                         </div>
                     </div>

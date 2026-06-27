@@ -35,6 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 $_SESSION['user_role'] = $user['role'];
                 $_SESSION['last_activity'] = time();
                 $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
+                
+                // Record login history
+                $ip_address = $_SERVER['REMOTE_ADDR'] ?? '';
+                $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+                $pdo->prepare("INSERT INTO login_history (user_id, login_time, ip_address, user_agent) VALUES (?, NOW(), ?, ?)")
+                    ->execute([$user['id'], $ip_address, $user_agent]);
+                $_SESSION['login_history_id'] = $pdo->lastInsertId();
+
                 redirect($user['role'] . '/index.php');
             } else {
                 $error = "Invalid credentials or account inactive.";
