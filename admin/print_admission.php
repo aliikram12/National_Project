@@ -1,6 +1,6 @@
 <?php
 /**
- * National College LMS - Print Admission Form
+ * National College LMS - Print Admission Form (A4 Optimized, Two-Column Layout)
  */
 
 require '../config/db.php';
@@ -53,160 +53,193 @@ $regNum = $a['registration_number'];
         body {
             font-family: 'Inter', system-ui, sans-serif;
             color: #0f172a;
-            background: #f8fafc;
-            padding: 40px 20px;
+            background: #e2e8f0;
+            padding: 30px 20px;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .no-print { text-align: center; margin-bottom: 24px; }
+
+        /* ── Action Buttons ── */
+        .no-print { text-align: center; margin-bottom: 20px; }
         .no-print button, .no-print a {
             padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600;
             cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
             gap: 8px; transition: all 0.2s; border: none; font-family: inherit;
         }
-        .no-print .print-btn { background: #1e3a8a; color: #fff; } /* Navy Blue */
-        .no-print .print-btn:hover { background: #172554; }
-        .no-print .back-btn { color: #64748b; margin-left: 16px; border: 1px solid #e2e8f0; }
-        .no-print .back-btn:hover { background: #fff; color: #1e293b; }
+        .no-print .print-btn { background: #1e3a8a; color: #fff; }
+        .no-print .print-btn:hover { background: #172554; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30,58,138,.3); }
+        .no-print .back-btn { color: #64748b; margin-left: 12px; border: 1px solid #cbd5e1; background: #fff; }
+        .no-print .back-btn:hover { background: #f8fafc; color: #1e293b; }
 
-        .print-admission-form {
-            max-width: 800px; margin: 0 auto; background: #fff;
-            border-top: 8px solid #1e3a8a; /* Navy Blue Accent */
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,.08); overflow: hidden;
-            position: relative;
+        /* ── A4 Form Container ── */
+        .print-form {
+            width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff;
+            border-top: 6px solid #1e3a8a;
+            box-shadow: 0 8px 40px rgba(0,0,0,.12);
+            overflow: hidden; position: relative;
+            padding: 0;
         }
 
         /* Watermark */
-        .print-admission-form::before {
+        .print-form::before {
             content: 'NATIONAL COLLEGE';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 80px;
-            font-weight: 900;
-            color: rgba(30, 58, 138, 0.04);
-            z-index: 0;
-            pointer-events: none;
-            white-space: nowrap;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-40deg);
+            font-size: 72px; font-weight: 900;
+            color: rgba(30, 58, 138, 0.03);
+            z-index: 0; pointer-events: none; white-space: nowrap;
         }
 
-        .print-header {
-            padding: 28px 40px; display: flex; justify-content: space-between;
-            align-items: flex-start; border-bottom: 2px solid #e2e8f0;
-            position: relative;
-            z-index: 1;
+        /* ── Header ── */
+        .form-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 32px; border-bottom: 2px solid #1e3a8a;
+            position: relative; z-index: 1; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
         }
-        .print-header .college {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        .form-header .college { display: flex; align-items: center; gap: 14px; }
+        .form-header .logo {
+            width: 52px; height: 52px; border-radius: 10px;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 26px; flex-shrink: 0;
         }
-        .print-header .college .logo {
-            width: 64px; height: 64px; border-radius: 8px; background: #1e3a8a; color: #fff; /* Navy Blue Logo Box */
-            display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold;
+        .form-header h1 {
+            font-size: 18px; color: #1e3a8a; font-weight: 800;
+            letter-spacing: -0.01em; text-transform: uppercase; line-height: 1.2;
         }
-        .print-header .college h1 {
-            font-size: 24px; color: #1e3a8a; font-weight: 800; /* Navy Blue Text */
-            letter-spacing: -0.02em; margin: 0;
-            text-transform: uppercase;
+        .form-header .tagline {
+            font-size: 9px; color: #3b82f6; letter-spacing: 2px;
+            margin-top: 2px; text-transform: uppercase; font-weight: 600;
         }
-        .print-header .college .tagline {
-            font-size: 11px; color: #2563eb; letter-spacing: 1.5px; /* Royal Blue */
-            margin-top: 4px; text-transform: uppercase; font-weight: 600;
+        .form-header .reg-box {
+            text-align: right; background: #1e3a8a; color: #fff;
+            padding: 10px 18px; border-radius: 8px; min-width: 160px;
         }
-        .print-header .reg { text-align: right; }
-        .print-header .reg .lbl {
-            font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+        .form-header .reg-box .lbl {
+            font-size: 8px; text-transform: uppercase; letter-spacing: 1.5px;
+            opacity: .7; font-weight: 500;
         }
-        .print-body { padding: 28px 40px; }
-
-        .print-section-title {
-            font-size: 12px; font-weight: 700; color: #1e3a8a; /* Navy Blue */
-            text-transform: uppercase; letter-spacing: 0.08em;
-            padding-bottom: 8px; border-bottom: 2px solid #bfdbfe; /* Light Blue Border */
-            margin: 24px 0 16px 0; display: flex; align-items: center; gap: 8px;
-        }
-        .print-section-title:first-child { margin-top: 0; }
-        .print-section-title i { font-size: 13px; color: #1e3a8a; }
-
-        .print-info-grid {
-            display: grid; grid-template-columns: 160px 1fr; gap: 0; margin-bottom: 4px;
-        }
-        .print-info-grid .row-label {
-            padding: 9px 0; color: #64748b; font-size: 13px; font-weight: 500;
-        }
-        .print-info-grid .row-value {
-            padding: 9px 0; font-weight: 600; font-size: 14px; color: #1e293b;
-            border-bottom: 1px solid #f8fafc;
-        }
-        
-        .print-photo-area {
-            display: flex; gap: 24px;
+        .form-header .reg-box .val {
+            font-size: 14px; font-weight: 700; letter-spacing: 1px; margin-top: 2px;
         }
 
-        .print-table {
-            width: 100%; border-collapse: collapse; margin-bottom: 4px;
+        /* ── Form Title Strip ── */
+        .form-title-strip {
+            text-align: center; padding: 8px; background: #1e3a8a; color: #fff;
+            font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
         }
-        .print-table th {
-            background: #1e3a8a; color: #fff; padding: 11px 16px;
-            font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+
+        /* ── Body ── */
+        .form-body {
+            padding: 20px 32px 16px; position: relative; z-index: 1;
+        }
+
+        /* ── Section Title ── */
+        .sec-title {
+            font-size: 10px; font-weight: 700; color: #1e3a8a;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            padding: 6px 12px; margin: 16px 0 10px 0;
+            background: linear-gradient(90deg, #eff6ff, transparent);
+            border-left: 3px solid #1e3a8a; border-radius: 0 4px 4px 0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sec-title:first-child { margin-top: 0; }
+        .sec-title i { font-size: 11px; }
+
+        /* ── Two Column Info Grid ── */
+        .info-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 0 28px; margin-bottom: 4px;
+        }
+        .info-row {
+            display: flex; padding: 5px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .info-row .lbl {
+            color: #64748b; font-size: 11px; font-weight: 500;
+            min-width: 110px; flex-shrink: 0;
+        }
+        .info-row .val {
+            font-weight: 600; font-size: 12px; color: #1e293b;
+        }
+        .info-row.full {
+            grid-column: 1 / -1;
+        }
+
+        /* ── Photo + Admission Info Area ── */
+        .admission-top {
+            display: flex; gap: 20px; align-items: flex-start;
+        }
+        .photo-box {
+            width: 100px; height: 120px; border-radius: 8px;
+            border: 2px solid #e2e8f0; overflow: hidden; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: #f8fafc;
+        }
+        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-box .placeholder { color: #cbd5e1; font-size: 36px; }
+
+        /* ── Course Details Table ── */
+        .course-table {
+            width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 11px;
+        }
+        .course-table th {
+            background: #1e3a8a; color: #fff; padding: 8px 10px;
+            font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px;
             font-weight: 600; text-align: left;
         }
-        .print-table td {
-            padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px;
+        .course-table td {
+            padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px;
         }
-        .print-table td.highlight { font-weight: 700; color: #1e3a8a; }
+        .course-table td.hl { font-weight: 700; color: #1e3a8a; }
 
-        .print-photo {
-            width: 110px; height: 130px; border-radius: 8px; object-fit: cover;
-            border: 2px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;
-        }
-        .print-photo-placeholder {
-            width: 110px; height: 130px; border-radius: 8px;
-            background: #f1f5f9; display: flex; align-items: center;
-            justify-content: center; color: #cbd5e1; font-size: 40px;
-            border: 2px solid #e2e8f0; flex-shrink: 0;
-        }
-
-        .print-signatures {
-            display: flex; justify-content: space-between;
-            margin-top: 60px; padding-top: 20px; border-top: 1px solid #e2e8f0;
-        }
-        .print-sig-box { text-align: center; width: 160px; }
-        .print-sig-box .line {
-            border-bottom: 1px solid #334155; height: 36px; margin-bottom: 6px;
-        }
-        .print-sig-box .name { font-size: 11px; color: #64748b; }
-
-        .print-footer {
-            text-align: center; padding: 16px 40px; font-size: 10px;
-            color: #94a3b8; border-top: 1px solid #f1f5f9;
-        }
-
-        .fee-highlight {
+        /* ── Fee Summary ── */
+        .fee-badge {
             display: inline-flex; align-items: center; gap: 6px;
-            background: #eff6ff; padding: 4px 12px; border-radius: 20px;
-            font-size: 12px; font-weight: 600; color: #1e3a8a;
+            background: #eff6ff; padding: 3px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 700; color: #1e3a8a;
             border: 1px solid #bfdbfe;
         }
 
+        /* ── Signatures ── */
+        .signatures {
+            display: flex; justify-content: space-between;
+            margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0;
+        }
+        .sig-box { text-align: center; width: 140px; }
+        .sig-box .line { border-bottom: 1px solid #334155; height: 32px; margin-bottom: 4px; }
+        .sig-box .name { font-size: 9px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ── Footer ── */
+        .form-footer {
+            text-align: center; padding: 10px 32px; font-size: 9px;
+            color: #94a3b8; border-top: 1px solid #f1f5f9;
+        }
+
+        /* ── Declaration ── */
+        .declaration {
+            margin-top: 16px; padding: 10px 14px;
+            background: #fefce8; border: 1px solid #fde68a; border-radius: 6px;
+            font-size: 10px; color: #92400e; line-height: 1.5;
+        }
+        .declaration strong { color: #78350f; }
+
+        /* ── Print Styles ── */
         @media print {
-            body { padding: 0; background: #fff; }
+            body { padding: 0; margin: 0; background: #fff; }
             .no-print { display: none !important; }
-            .print-admission-form {
-                box-shadow: none !important; border-radius: 0 !important;
-                border-top-width: 5px; max-width: 100% !important;
+            .print-form {
+                box-shadow: none !important; width: 100% !important;
+                min-height: auto; border-top-width: 4px;
             }
         }
         @media (max-width: 600px) {
-            .print-header { flex-direction: column; gap: 12px; padding: 20px; }
-            .print-body { padding: 20px; }
-            .print-info-grid { grid-template-columns: 1fr; }
-            .print-info-grid .row-label { font-weight: 700; color: #475569; }
-            .print-signatures { flex-direction: column; gap: 20px; }
-            .print-photo-area { flex-direction: column; }
+            .print-form { width: 100%; min-height: auto; }
+            .form-header { flex-direction: column; gap: 12px; padding: 16px; }
+            .form-body { padding: 16px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .signatures { flex-direction: column; gap: 16px; align-items: center; }
+            .admission-top { flex-direction: column; align-items: center; }
         }
     </style>
 </head>
@@ -217,75 +250,75 @@ $regNum = $a['registration_number'];
     <a href="student_profile.php?id=<?php echo $a['id']; ?>" class="back-btn" style="margin-left:8px"><i class="fas fa-user"></i> Profile</a>
 </div>
 
-<div class="print-admission-form">
-    <div class="print-header">
+<div class="print-form">
+    <!-- Header -->
+    <div class="form-header">
         <div class="college">
             <div class="logo"><i class="fas fa-graduation-cap"></i></div>
             <div>
-                <h1>NATIONAL COLLEGE OF TECHNOLOGY</h1>
+                <h1>National College<br>of Technology</h1>
                 <div class="tagline">Excellence in Education & Leadership</div>
             </div>
         </div>
-        <div class="reg">
+        <div class="reg-box">
             <div class="lbl">Registration Number</div>
             <div class="val"><?php echo e($regNum); ?></div>
         </div>
     </div>
 
-    <div class="print-body">
-        <!-- Admission Info -->
-        <div class="print-section-title"><i class="fas fa-file-signature"></i> Admission Information</div>
-        <div class="print-photo-area" style="margin-bottom:16px">
-            <?php if ($a['student_photo'] && file_exists('../uploads/students/' . $a['student_photo'])): ?>
-                <img src="../uploads/students/<?php echo e($a['student_photo']); ?>" class="print-photo" alt="Student Photo">
-            <?php else: ?>
-                <div class="print-photo-placeholder"><i class="fas fa-user"></i></div>
-            <?php endif; ?>
+    <div class="form-title-strip">Admission Form</div>
+
+    <div class="form-body">
+        <!-- ─── Admission Information + Photo ─── -->
+        <div class="sec-title"><i class="fas fa-file-signature"></i> Admission Information</div>
+        <div class="admission-top">
+            <div class="photo-box">
+                <?php if ($a['student_photo'] && file_exists('../uploads/students/' . $a['student_photo'])): ?>
+                    <img src="../uploads/students/<?php echo e($a['student_photo']); ?>" alt="Student Photo">
+                <?php else: ?>
+                    <div class="placeholder"><i class="fas fa-user"></i></div>
+                <?php endif; ?>
+            </div>
             <div style="flex:1">
-                <div class="print-info-grid">
-                    <div class="row-label">Sr Number</div><div class="row-value"><?php echo e($a['sr_number'] ?? '—'); ?></div>
-                    <div class="row-label">Date of Admission</div><div class="row-value"><?php echo date('d M Y', strtotime($a['date_of_admission'])); ?></div>
-                    <div class="row-label">Duration</div><div class="row-value"><?php echo e($a['duration']); ?></div>
-                    <div class="row-label">Degree Type</div><div class="row-value"><?php echo e($a['degree_type']); ?></div>
-                    <div class="row-label">Session</div><div class="row-value"><?php echo e($a['session_start']); ?> - <?php echo e($a['session_end']); ?></div>
-                    <div class="row-label">Time Slot</div><div class="row-value"><?php echo e($a['time_range']); ?></div>
-                    <div class="row-label">Fee Package</div><div class="row-value">
-                        <?php echo e($feePkgName); ?>
-                        <?php if ($feePkgTotal > 0): ?>
-                            <span class="fee-highlight">Rs. <?php echo number_format($feePkgTotal); ?></span>
-                        <?php endif; ?>
-                    </div>
+                <div class="info-grid">
+                    <div class="info-row"><div class="lbl">Sr Number</div><div class="val"><?php echo e($a['sr_number'] ?? '—'); ?></div></div>
+                    <div class="info-row"><div class="lbl">Date of Admission</div><div class="val"><?php echo date('d M Y', strtotime($a['date_of_admission'])); ?></div></div>
+                    <div class="info-row"><div class="lbl">Duration</div><div class="val"><?php echo e($a['duration']); ?></div></div>
+                    <div class="info-row"><div class="lbl">Degree Type</div><div class="val"><?php echo e($a['degree_type']); ?></div></div>
+                    <div class="info-row"><div class="lbl">Session</div><div class="val"><?php echo e($a['session_start']); ?> — <?php echo e($a['session_end']); ?></div></div>
+                    <div class="info-row"><div class="lbl">Time Slot</div><div class="val"><?php echo e($a['time_range']); ?></div></div>
+                    <div class="info-row full"><div class="lbl">Fee Package</div><div class="val"><?php echo e($feePkgName); ?> <?php if ($feePkgTotal > 0): ?><span class="fee-badge">Rs. <?php echo number_format($feePkgTotal); ?></span><?php endif; ?></div></div>
                 </div>
             </div>
         </div>
 
-        <!-- Student Info -->
-        <div class="print-section-title"><i class="fas fa-user"></i> Student Information</div>
-        <div class="print-info-grid">
-            <div class="row-label">Full Name</div><div class="row-value"><?php echo e($a['student_name']); ?></div>
-            <div class="row-label">Father's Name</div><div class="row-value"><?php echo e($a['father_name']); ?></div>
-            <div class="row-label">Gender</div><div class="row-value"><?php echo e($a['gender']); ?></div>
-            <div class="row-label">Date of Birth</div><div class="row-value"><?php echo date('d M Y', strtotime($a['date_of_birth'])); ?></div>
-            <div class="row-label">Nationality</div><div class="row-value"><?php echo e($a['nationality']); ?></div>
-            <div class="row-label">CNIC</div><div class="row-value"><?php echo e($a['cnic']); ?></div>
+        <!-- ─── Student Information ─── -->
+        <div class="sec-title"><i class="fas fa-user"></i> Student Information</div>
+        <div class="info-grid">
+            <div class="info-row"><div class="lbl">Full Name</div><div class="val"><?php echo e($a['student_name']); ?></div></div>
+            <div class="info-row"><div class="lbl">Father's Name</div><div class="val"><?php echo e($a['father_name']); ?></div></div>
+            <div class="info-row"><div class="lbl">Gender</div><div class="val"><?php echo e($a['gender']); ?></div></div>
+            <div class="info-row"><div class="lbl">Date of Birth</div><div class="val"><?php echo date('d M Y', strtotime($a['date_of_birth'])); ?></div></div>
+            <div class="info-row"><div class="lbl">Nationality</div><div class="val"><?php echo e($a['nationality']); ?></div></div>
+            <div class="info-row"><div class="lbl">CNIC</div><div class="val"><?php echo e($a['cnic']); ?></div></div>
         </div>
 
-        <!-- Contact Info -->
-        <div class="print-section-title"><i class="fas fa-address-book"></i> Contact & Address</div>
-        <div class="print-info-grid">
-            <div class="row-label">Mailing Address</div><div class="row-value"><?php echo e($a['mailing_address']); ?></div>
-            <div class="row-label">Permanent Address</div><div class="row-value"><?php echo e($a['permanent_address']); ?></div>
-            <div class="row-label">Student Mobile</div><div class="row-value"><?php echo e($a['student_mobile']); ?></div>
-            <div class="row-label">Guardian Mobile</div><div class="row-value"><?php echo e($a['guardian_mobile']); ?></div>
-            <div class="row-label">Student Email</div><div class="row-value"><?php echo !empty($a['student_email']) ? e($a['student_email']) : '—'; ?></div>
-            <div class="row-label">Guardian Email</div><div class="row-value"><?php echo !empty($a['guardian_email']) ? e($a['guardian_email']) : '—'; ?></div>
-            <div class="row-label">Occupation</div><div class="row-value"><?php echo !empty($a['occupation']) ? e($a['occupation']) : '—'; ?></div>
-            <div class="row-label">Monthly Income</div><div class="row-value"><?php echo !empty($a['monthly_income']) ? 'Rs. ' . number_format($a['monthly_income']) : '—'; ?></div>
+        <!-- ─── Contact & Address ─── -->
+        <div class="sec-title"><i class="fas fa-address-book"></i> Contact & Address</div>
+        <div class="info-grid">
+            <div class="info-row full"><div class="lbl">Mailing Address</div><div class="val"><?php echo e($a['mailing_address']); ?></div></div>
+            <div class="info-row full"><div class="lbl">Permanent Address</div><div class="val"><?php echo e($a['permanent_address']); ?></div></div>
+            <div class="info-row"><div class="lbl">Student Mobile</div><div class="val"><?php echo e($a['student_mobile']); ?></div></div>
+            <div class="info-row"><div class="lbl">Guardian Mobile</div><div class="val"><?php echo e($a['guardian_mobile']); ?></div></div>
+            <div class="info-row"><div class="lbl">Student Email</div><div class="val"><?php echo !empty($a['student_email']) ? e($a['student_email']) : '—'; ?></div></div>
+            <div class="info-row"><div class="lbl">Guardian Email</div><div class="val"><?php echo !empty($a['guardian_email']) ? e($a['guardian_email']) : '—'; ?></div></div>
+            <div class="info-row"><div class="lbl">Occupation</div><div class="val"><?php echo !empty($a['occupation']) ? e($a['occupation']) : '—'; ?></div></div>
+            <div class="info-row"><div class="lbl">Monthly Income</div><div class="val"><?php echo !empty($a['monthly_income']) ? 'Rs. ' . number_format($a['monthly_income']) : '—'; ?></div></div>
         </div>
 
-        <!-- Course Info Table -->
-        <div class="print-section-title"><i class="fas fa-book-open"></i> Course Details</div>
-        <table class="print-table">
+        <!-- ─── Course Details Table ─── -->
+        <div class="sec-title"><i class="fas fa-book-open"></i> Course Details</div>
+        <table class="course-table">
             <thead>
                 <tr>
                     <th>Programme / Course</th>
@@ -297,35 +330,45 @@ $regNum = $a['registration_number'];
             </thead>
             <tbody>
                 <tr>
-                    <td class="highlight"><?php echo e($a['course_name']); ?></td>
+                    <td class="hl"><?php echo e($a['course_name']); ?></td>
                     <td><?php echo e($a['course_code'] ?? '—'); ?></td>
                     <td><?php echo e($a['duration']); ?></td>
-                    <td class="highlight"><?php echo e($a['time_range']); ?></td>
+                    <td class="hl"><?php echo e($a['time_range']); ?></td>
                     <td><?php echo date('d M Y', strtotime($a['date_of_admission'])); ?></td>
                 </tr>
             </tbody>
         </table>
 
-        <!-- Signatures -->
-        <div class="print-signatures">
-            <div class="print-sig-box">
+        <!-- ─── Declaration ─── -->
+        <div class="declaration">
+            <strong>Declaration:</strong> I hereby declare that the above information is correct and complete. I agree to abide by all the rules and regulations of the institution. I understand that providing false information may lead to cancellation of my admission.
+        </div>
+
+        <!-- ─── Signatures ─── -->
+        <div class="signatures">
+            <div class="sig-box">
                 <div class="line"></div>
                 <div class="name">Student Signature</div>
             </div>
-            <div class="print-sig-box">
+            <div class="sig-box">
+                <div class="line"></div>
+                <div class="name">Guardian Signature</div>
+            </div>
+            <div class="sig-box">
                 <div class="line"></div>
                 <div class="name">Receptionist</div>
             </div>
-            <div class="print-sig-box">
+            <div class="sig-box">
                 <div class="line"></div>
                 <div class="name">Principal</div>
             </div>
         </div>
     </div>
 
-    <div class="print-footer">
-        National College of Technology LMS &bull; Generated on <?php echo date('d M Y \a\t h:i A'); ?>
-        &bull; Registration #: <?php echo e($regNum); ?>
+    <div class="form-footer">
+        National College of Technology &bull; Generated on <?php echo date('d M Y \a\t h:i A'); ?>
+        &bull; Reg #: <?php echo e($regNum); ?>
+        &bull; Prepared by: <?php echo e($a['created_by_name']); ?>
     </div>
 </div>
 </body>

@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
     redirect('slots.php');
 }
 
-$slots = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM enrollments e WHERE e.slot_id=s.id) as student_count FROM slots s")->fetchAll();
+$slots = $pdo->query("SELECT s.*, (SELECT COUNT(*) FROM admissions a WHERE a.time_slot_id=s.id AND a.status='active') as student_count FROM slots s")->fetchAll();
 ?>
 <?php include '../includes/dashboard_header.php'; ?>
 

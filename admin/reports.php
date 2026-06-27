@@ -81,9 +81,9 @@ if ($reportType === 'admissions') {
               ORDER BY c.name ASC";
 
 } elseif ($reportType === 'slots') {
-    $query = "SELECT s.time_range as slot_time, COUNT(e.id) as total_enrollments
+    $query = "SELECT s.time_range as slot_time, COUNT(a.id) as total_admissions
               FROM slots s
-              LEFT JOIN enrollments e ON s.id = e.slot_id
+              LEFT JOIN admissions a ON s.id = a.time_slot_id AND a.status='active'
               GROUP BY s.id
               ORDER BY s.time_range ASC";
 }
@@ -177,7 +177,7 @@ if (isset($_GET['export']) && !empty($results)) {
         } elseif ($reportType === 'courses') {
             $widths = ['#' => '5%', 'Course Code' => '15%', 'Course Name' => '35%', 'Fee' => '15%', 'Duration Months' => '15%', 'Department' => '15%'];
         } elseif ($reportType === 'slots') {
-            $widths = ['#' => '10%', 'Slot Time' => '45%', 'Total Enrollments' => '45%'];
+            $widths = ['#' => '10%', 'Slot time' => '45%', 'Total admissions' => '45%'];
         } else {
             $widths = ['#' => '5%']; // Default 5% for Sr no.
         }

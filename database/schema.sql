@@ -133,7 +133,8 @@ CREATE TABLE IF NOT EXISTS admissions (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- 5. STUDENTS TABLE
+-- 5. STUDENTS TABLE (DEPRECATED - Use admissions table instead)
+-- Kept for backward compatibility only. Not used by any active PHP code.
 -- ============================================
 CREATE TABLE IF NOT EXISTS students (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -151,7 +152,8 @@ CREATE TABLE IF NOT EXISTS students (
 ) ENGINE=InnoDB;
 
 -- ============================================
--- 6. ENROLLMENTS TABLE
+-- 6. ENROLLMENTS TABLE (DEPRECATED - Use admissions table instead)
+-- Kept for backward compatibility only. Not used by any active PHP code.
 -- ============================================
 CREATE TABLE IF NOT EXISTS enrollments (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -15,12 +15,11 @@ $status = $_GET['status'] ?? '';
 
 // Build Query
 $params = [];
-$query = "SELECT s.id, s.name, s.contact, c.name as course, sl.time_range as slot, e.enrollment_date, s.status 
-          FROM students s 
-          JOIN enrollments e ON s.id=e.student_id 
-          JOIN courses c ON e.course_id=c.id 
-          JOIN slots sl ON e.slot_id=sl.id 
-          WHERE e.enrollment_date BETWEEN ? AND ?";
+$query = "SELECT s.id, s.student_name as name, s.student_mobile as contact, c.name as course, sl.time_range as slot, s.date_of_admission as enrollment_date, s.status 
+          FROM admissions s 
+          JOIN courses c ON s.course_id=c.id 
+          JOIN slots sl ON s.time_slot_id=sl.id 
+          WHERE s.date_of_admission BETWEEN ? AND ?";
 $params[] = $dateFrom;
 $params[] = $dateTo;
 
