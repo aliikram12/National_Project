@@ -2,7 +2,7 @@
 require '../config/db.php';
 requireRole('receptionist');
 
-$totalStudents = $pdo->query("SELECT COUNT(*) FROM students")->fetchColumn();
+$totalStudents = $pdo->query("SELECT COUNT(*) FROM admissions")->fetchColumn();
 $todayAdmissions = $pdo->query("SELECT COUNT(*) FROM admissions WHERE DATE(created_at)=CURDATE()")->fetchColumn();
 $weeklyAdmissions = $pdo->query("SELECT COUNT(*) FROM admissions WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)")->fetchColumn();
 

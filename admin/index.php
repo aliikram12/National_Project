@@ -3,26 +3,26 @@ require '../config/db.php';
 requireRole('admin');
 
 // Analytics
-$totalStudents = $pdo->query("SELECT COUNT(*) FROM students")->fetchColumn();
-$activeStudents = $pdo->query("SELECT COUNT(*) FROM students WHERE status='active'")->fetchColumn();
-$struckOff = $totalStudents - $activeStudents;
+$totalStudents = $pdo->query("SELECT COUNT(*) FROM admissions")->fetchColumn();
+$activeStudents = $pdo->query("SELECT COUNT(*) FROM admissions WHERE status='active'")->fetchColumn();
+$struckOff = $pdo->query("SELECT COUNT(*) FROM admissions WHERE status IN ('dropped', 'struck_off', 'transferred')")->fetchColumn();
 $totalCourses = $pdo->query("SELECT COUNT(*) FROM courses WHERE status='active'")->fetchColumn();
 $totalTeachers = $pdo->query("SELECT COUNT(*) FROM users WHERE role='teacher' AND status='active'")->fetchColumn();
-$weeklyAdmissions = $pdo->query("SELECT COUNT(*) FROM enrollments WHERE enrollment_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)")->fetchColumn();
-$monthlyAdmissions = $pdo->query("SELECT COUNT(*) FROM enrollments WHERE enrollment_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)")->fetchColumn();
+$weeklyAdmissions = $pdo->query("SELECT COUNT(*) FROM admissions WHERE date_of_admission >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)")->fetchColumn();
+$monthlyAdmissions = $pdo->query("SELECT COUNT(*) FROM admissions WHERE date_of_admission >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)")->fetchColumn();
 
 // Chart: Students per course
-$courseChart = $pdo->query("SELECT c.name, COUNT(e.student_id) as cnt FROM courses c LEFT JOIN enrollments e ON c.id=e.course_id GROUP BY c.id ORDER BY cnt DESC LIMIT 10")->fetchAll();
+$courseChart = $pdo->query("SELECT c.name, COUNT(a.id) as cnt FROM courses c LEFT JOIN admissions a ON c.id=a.course_id GROUP BY c.id ORDER BY cnt DESC LIMIT 10")->fetchAll();
 $cNames = array_column($courseChart, 'name');
 $cCounts = array_column($courseChart, 'cnt');
 
 // Chart: Students per slot
-$slotChart = $pdo->query("SELECT s.time_range, COUNT(e.student_id) as cnt FROM slots s LEFT JOIN enrollments e ON s.id=e.slot_id GROUP BY s.id")->fetchAll();
+$slotChart = $pdo->query("SELECT s.time_range, COUNT(a.id) as cnt FROM slots s LEFT JOIN admissions a ON s.id=a.time_slot_id GROUP BY s.id")->fetchAll();
 $sNames = array_column($slotChart, 'time_range');
 $sCounts = array_column($slotChart, 'cnt');
 
 // Recent admissions
-$recent = $pdo->query("SELECT s.name as student_name, c.name as course_name, e.enrollment_date FROM enrollments e JOIN students s ON e.student_id=s.id JOIN courses c ON e.course_id=c.id ORDER BY e.enrollment_date DESC LIMIT 6")->fetchAll();
+$recent = $pdo->query("SELECT a.student_name, c.name as course_name, a.date_of_admission as enrollment_date FROM admissions a JOIN courses c ON a.course_id=c.id ORDER BY a.date_of_admission DESC LIMIT 6")->fetchAll();
 ?>
 <?php include '../includes/dashboard_header.php'; ?>
 

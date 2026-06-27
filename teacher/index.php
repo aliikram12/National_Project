@@ -3,9 +3,15 @@ require '../config/db.php';
 requireRole('teacher');
 
 $teacher_id = $_SESSION['user_id'];
+// Get all courses assigned to this teacher, and for each course find active slots from admissions
 $stmt = $pdo->prepare("SELECT c.name as course_name, c.id as course_id, s.time_range, s.id as slot_id,
-                       (SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id AND e.slot_id=s.id) as student_count
-                       FROM course_teachers ct JOIN courses c ON ct.course_id=c.id JOIN slots s ON ct.slot_id=s.id WHERE ct.teacher_id=?");
+                       (SELECT COUNT(*) FROM admissions a WHERE a.course_id=c.id AND a.time_slot_id=s.id AND a.status='active') as student_count
+                       FROM course_teachers ct 
+                       JOIN courses c ON ct.course_id=c.id 
+                       JOIN admissions a ON a.course_id=c.id
+                       JOIN slots s ON a.time_slot_id=s.id 
+                       WHERE ct.teacher_id=? AND a.status='active'
+                       GROUP BY c.id, s.id");
 $stmt->execute([$teacher_id]);
 $classes = $stmt->fetchAll();
 $totalStudents = array_sum(array_column($classes, 'student_count'));

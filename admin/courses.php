@@ -21,12 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
         $pdo->prepare("DELETE FROM courses WHERE id=?")->execute([$_POST['id']]);
         setFlash('success', 'Course deleted.');
     } elseif ($action === 'assign_teacher') {
-        $check = $pdo->prepare("SELECT id FROM course_teachers WHERE course_id=? AND teacher_id=? AND slot_id=?");
-        $check->execute([$_POST['course_id'], $_POST['teacher_id'], $_POST['slot_id']]);
-        if ($check->fetch()) { setFlash('warning', 'This assignment already exists.'); }
+        $check = $pdo->prepare("SELECT * FROM course_teachers WHERE course_id=? AND teacher_id=?");
+        $check->execute([$_POST['course_id'], $_POST['teacher_id']]);
+        if ($check->fetch()) { setFlash('warning', 'This teacher is already assigned to this course.'); }
         else {
-            $pdo->prepare("INSERT INTO course_teachers (course_id, teacher_id, slot_id) VALUES (?, ?, ?)")->execute([$_POST['course_id'], $_POST['teacher_id'], $_POST['slot_id']]);
-            setFlash('success', 'Teacher assigned.');
+            $pdo->prepare("INSERT INTO course_teachers (course_id, teacher_id) VALUES (?, ?)")->execute([$_POST['course_id'], $_POST['teacher_id']]);
+            setFlash('success', 'Teacher assigned to course.');
         }
     }
     redirect('courses.php');
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCsrfToken($_POST['csrf_token'
 $courses = $pdo->query("SELECT * FROM courses ORDER BY id DESC")->fetchAll();
 $teachers = $pdo->query("SELECT id, name FROM users WHERE role='teacher' AND status='active'")->fetchAll();
 $slots = $pdo->query("SELECT * FROM slots WHERE status='active'")->fetchAll();
-$assignments = $pdo->query("SELECT ct.id, c.name as course, u.name as teacher, s.time_range FROM course_teachers ct JOIN courses c ON ct.course_id=c.id JOIN users u ON ct.teacher_id=u.id JOIN slots s ON ct.slot_id=s.id ORDER BY ct.id DESC")->fetchAll();
+$assignments = $pdo->query("SELECT ct.course_id, ct.teacher_id, c.name as course, u.name as teacher, ct.assigned_at FROM course_teachers ct JOIN courses c ON ct.course_id=c.id JOIN users u ON ct.teacher_id=u.id ORDER BY ct.assigned_at DESC")->fetchAll();
 ?>
 <?php include '../includes/dashboard_header.php'; ?>
 
@@ -82,13 +82,12 @@ $assignments = $pdo->query("SELECT ct.id, c.name as course, u.name as teacher, s
             <?php csrfField(); ?><input type="hidden" name="action" value="assign_teacher">
             <div class="form-group"><label>Teacher</label><select name="teacher_id" class="form-control" required><?php foreach($teachers as $t): ?><option value="<?php echo $t['id']; ?>"><?php echo e($t['name']); ?></option><?php endforeach; ?></select></div>
             <div class="form-group"><label>Course</label><select name="course_id" class="form-control" required><?php foreach($courses as $c): ?><option value="<?php echo $c['id']; ?>"><?php echo e($c['name']); ?></option><?php endforeach; ?></select></div>
-            <div class="form-group"><label>Slot</label><select name="slot_id" class="form-control" required><?php foreach($slots as $s): ?><option value="<?php echo $s['id']; ?>"><?php echo e($s['time_range']); ?></option><?php endforeach; ?></select></div>
             <button class="btn btn-primary" style="width:100%"><i class="fas fa-check"></i> Assign</button>
         </form>
         <h4 style="font-size:14px;margin-bottom:10px;color:var(--gray-600)">Current Assignments</h4>
         <?php foreach($assignments as $a): ?>
         <div style="padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:13px">
-            <strong><?php echo e($a['teacher']); ?></strong> → <?php echo e($a['course']); ?> <span class="badge badge-info" style="font-size:10px"><?php echo e($a['time_range']); ?></span>
+            <strong><?php echo e($a['teacher']); ?></strong> → <?php echo e($a['course']); ?>
         </div>
         <?php endforeach; ?>
     </div>
