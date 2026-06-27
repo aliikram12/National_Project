@@ -44,38 +44,45 @@ class NationalCollegePDF extends TCPDF {
     }
 
     public function Header() {
-        // Header Text
-        $this->SetY(12);
+        // Deep navy blue colored header bar
+        $this->SetFillColor(30, 58, 138); // Navy blue: #1e3a8a
+        $this->Rect(0, 0, $this->getPageWidth(), 35, 'F');
         
-        // Deep navy blue color for branding
-        $this->SetTextColor(10, 25, 47);
+        $this->SetY(10);
+        
+        // Text color for header bar (white/light)
+        $this->SetTextColor(255, 255, 255);
         
         // Main College Title
-        $this->SetFont('helvetica', 'B', 24);
+        $this->SetFont('helvetica', 'B', 22);
         $this->Cell(0, 10, 'NATIONAL COLLEGE OF TECHNOLOGY', 0, 1, 'C');
         
         // Tagline / Sub-heading
         $this->SetFont('helvetica', 'I', 11);
-        $this->SetTextColor(59, 130, 246);
-        $this->Cell(0, 6, 'Empowering Education Through Technology', 0, 1, 'C');
+        $this->SetTextColor(191, 219, 254); // Light blue: #bfdbfe
+        $this->Cell(0, 5, 'Excellence in Education & Leadership', 0, 1, 'C');
         
-        $this->Ln(1);
+        // Reset colors for text below header bar
+        $this->SetY(42);
         
         $this->SetFont('helvetica', '', 10);
-        $this->SetTextColor(80, 80, 80);
+        $this->SetTextColor(71, 85, 105); // #475569
         $this->Cell(0, 5, 'National Building Near UBL Bank University Road Sargodha', 0, 1, 'C');
         
         $this->SetFont('helvetica', 'B', 10);
-        $this->SetTextColor(60, 60, 60);
+        $this->SetTextColor(30, 58, 138); // Navy blue text
         $this->Cell(0, 5, 'Email: ncet.sgd@gmail.com   |   Phone: 0316-7772003, 0316-7772004', 0, 1, 'C');
         
         // Premium double border (Thick + Thin)
-        $this->SetY(44);
-        $this->SetDrawColor(10, 25, 47);
+        $this->SetY(56);
+        $this->SetDrawColor(30, 58, 138);
         $this->SetLineWidth(0.8);
-        $this->Line(15, 44, $this->getPageWidth() - 15, 44);
+        $this->Line(15, 56, $this->getPageWidth() - 15, 56);
         $this->SetLineWidth(0.2);
-        $this->Line(15, 45.2, $this->getPageWidth() - 15, 45.2);
+        $this->Line(15, 57.2, $this->getPageWidth() - 15, 57.2);
+        
+        // Margins for content to start below header
+        $this->SetTopMargin(62);
         
         // Watermark
         if ($this->settings['show_watermark'] && !empty($this->settings['watermark_text'])) {

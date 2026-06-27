@@ -74,7 +74,7 @@ $recent = $pdo->query("SELECT s.name as student_name, c.name as course_name, e.e
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 2fr;gap:24px">
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:24px;margin-bottom:24px">
     <div class="card">
         <div class="card-header"><h3><i class="fas fa-clock" style="margin-right:8px;color:var(--cyan)"></i> By Time Slot</h3></div>
         <div style="height:220px;position:relative"><canvas id="slotChart"></canvas></div>
@@ -89,6 +89,75 @@ $recent = $pdo->query("SELECT s.name as student_name, c.name as course_name, e.e
         </div>
     </div>
 </div>
+
+<?php 
+// Fetch recent logins for dashboard
+$recentLogins = [];
+try {
+    $recentLogins = $pdo->query("SELECT lh.*, u.name as user_name, u.role as user_role 
+                                 FROM login_history lh 
+                                 JOIN users u ON lh.user_id = u.id 
+                                 ORDER BY lh.login_time DESC LIMIT 5")->fetchAll();
+} catch (PDOException $e) {}
+?>
+<div class="card">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <h3><i class="fas fa-history" style="margin-right:8px;color:var(--royal)"></i> Recent User Logins</h3>
+        <a href="login_history.php" class="btn btn-sm btn-outline-primary" style="font-size:12px;padding:4px 10px;">View Full History</a>
+    </div>
+    <div class="table-responsive">
+        <table style="margin-bottom:0;">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Login Time</th>
+                    <th>Status / Duration</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($recentLogins as $row): 
+                    $loginTime = new DateTime($row['login_time']);
+                    $logoutTime = $row['logout_time'] ? new DateTime($row['logout_time']) : null;
+                    
+                    $durationStr = '—';
+                    if ($logoutTime) {
+                        $diff = $loginTime->diff($logoutTime);
+                        $durationParts = [];
+                        if ($diff->h > 0) $durationParts[] = $diff->h . 'h';
+                        if ($diff->i > 0) $durationParts[] = $diff->i . 'm';
+                        $durationStr = 'Logged out (' . (!empty($durationParts) ? implode(' ', $durationParts) : '< 1m') . ')';
+                    } elseif ($loginTime->diff(new DateTime())->h < 12) {
+                        $durationStr = '<span class="text-success" style="font-weight:600;"><i class="fas fa-circle" style="font-size:8px;animation:pulse 2s infinite"></i> Active Now</span>';
+                    } else {
+                        $durationStr = '<span class="text-warning">Session Expired</span>';
+                    }
+                ?>
+                <tr>
+                    <td><strong><?php echo e($row['user_name']); ?></strong></td>
+                    <td><span style="text-transform:capitalize;font-size:11px;" class="badge badge-<?php echo $row['user_role'] === 'admin' ? 'primary' : ($row['user_role'] === 'teacher' ? 'success' : 'warning'); ?>"><?php echo e($row['user_role']); ?></span></td>
+                    <td style="font-size:13px"><?php echo $loginTime->format('M d, h:i A'); ?></td>
+                    <td style="font-size:13px;"><?php echo $durationStr; ?></td>
+                    <td style="font-size:12px; color:var(--gray-500); font-family:monospace;"><?php echo e($row['ip_address'] ?: 'Unknown'); ?></td>
+                </tr>
+                <?php endforeach; ?>
+                <?php if (empty($recentLogins)): ?>
+                <tr>
+                    <td colspan="5" class="text-center" style="padding:20px;color:var(--gray-500)">No recent logins found.</td>
+                </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<style>
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+</style>
 
 <script>
 Chart.defaults.font.family="'Inter',sans-serif";

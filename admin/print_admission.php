@@ -52,7 +52,7 @@ $regNum = $a['registration_number'];
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', system-ui, sans-serif;
-            color: #1e293b;
+            color: #0f172a;
             background: #f8fafc;
             padding: 40px 20px;
             -webkit-print-color-adjust: exact;
@@ -64,20 +64,39 @@ $regNum = $a['registration_number'];
             cursor: pointer; text-decoration: none; display: inline-flex; align-items: center;
             gap: 8px; transition: all 0.2s; border: none; font-family: inherit;
         }
-        .no-print .print-btn { background: #15803d; color: #fff; }
-        .no-print .print-btn:hover { background: #166534; }
+        .no-print .print-btn { background: #1e3a8a; color: #fff; } /* Navy Blue */
+        .no-print .print-btn:hover { background: #172554; }
         .no-print .back-btn { color: #64748b; margin-left: 16px; border: 1px solid #e2e8f0; }
         .no-print .back-btn:hover { background: #fff; color: #1e293b; }
 
         .print-admission-form {
             max-width: 800px; margin: 0 auto; background: #fff;
-            border-top: 6px solid #15803d; border-radius: 0 0 12px 12px;
+            border-top: 8px solid #1e3a8a; /* Navy Blue Accent */
+            border-radius: 0 0 12px 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,.08); overflow: hidden;
+            position: relative;
+        }
+
+        /* Watermark */
+        .print-admission-form::before {
+            content: 'NATIONAL COLLEGE';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(30, 58, 138, 0.04);
+            z-index: 0;
+            pointer-events: none;
+            white-space: nowrap;
         }
 
         .print-header {
             padding: 28px 40px; display: flex; justify-content: space-between;
-            align-items: flex-start; border-bottom: 2px solid #f1f5f9;
+            align-items: flex-start; border-bottom: 2px solid #e2e8f0;
+            position: relative;
+            z-index: 1;
         }
         .print-header .college {
             display: flex;
@@ -85,36 +104,32 @@ $regNum = $a['registration_number'];
             gap: 16px;
         }
         .print-header .college .logo {
-            width: 60px; height: 60px; border-radius: 8px; background: #15803d; color: #fff;
-            display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold;
+            width: 64px; height: 64px; border-radius: 8px; background: #1e3a8a; color: #fff; /* Navy Blue Logo Box */
+            display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold;
         }
         .print-header .college h1 {
-            font-size: 22px; color: #14532d; font-weight: 800;
-            letter-spacing: -0.01em; margin: 0;
+            font-size: 24px; color: #1e3a8a; font-weight: 800; /* Navy Blue Text */
+            letter-spacing: -0.02em; margin: 0;
+            text-transform: uppercase;
         }
         .print-header .college .tagline {
-            font-size: 11px; color: #64748b; letter-spacing: 1.5px;
-            margin-top: 4px; text-transform: uppercase;
+            font-size: 11px; color: #2563eb; letter-spacing: 1.5px; /* Royal Blue */
+            margin-top: 4px; text-transform: uppercase; font-weight: 600;
         }
         .print-header .reg { text-align: right; }
         .print-header .reg .lbl {
-            font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;
+            font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
         }
-        .print-header .reg .val {
-            font-size: 16px; font-weight: 700; color: #15803d; margin-top: 3px;
-            font-family: 'Courier New', monospace;
-        }
-
         .print-body { padding: 28px 40px; }
 
         .print-section-title {
-            font-size: 12px; font-weight: 700; color: #14532d;
+            font-size: 12px; font-weight: 700; color: #1e3a8a; /* Navy Blue */
             text-transform: uppercase; letter-spacing: 0.08em;
-            padding-bottom: 8px; border-bottom: 2px solid #bbf7d0;
+            padding-bottom: 8px; border-bottom: 2px solid #bfdbfe; /* Light Blue Border */
             margin: 24px 0 16px 0; display: flex; align-items: center; gap: 8px;
         }
         .print-section-title:first-child { margin-top: 0; }
-        .print-section-title i { font-size: 13px; color: #15803d; }
+        .print-section-title i { font-size: 13px; color: #1e3a8a; }
 
         .print-info-grid {
             display: grid; grid-template-columns: 160px 1fr; gap: 0; margin-bottom: 4px;
@@ -126,23 +141,24 @@ $regNum = $a['registration_number'];
             padding: 9px 0; font-weight: 600; font-size: 14px; color: #1e293b;
             border-bottom: 1px solid #f8fafc;
         }
+        
+        .print-photo-area {
+            display: flex; gap: 24px;
+        }
 
         .print-table {
             width: 100%; border-collapse: collapse; margin-bottom: 4px;
         }
         .print-table th {
-            background: #15803d; color: #fff; padding: 11px 16px;
+            background: #1e3a8a; color: #fff; padding: 11px 16px;
             font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
             font-weight: 600; text-align: left;
         }
         .print-table td {
             padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px;
         }
-        .print-table td.highlight { font-weight: 700; color: #15803d; }
+        .print-table td.highlight { font-weight: 700; color: #1e3a8a; }
 
-        .print-photo-area {
-            display: flex; gap: 24px; align-items: flex-start;
-        }
         .print-photo {
             width: 110px; height: 130px; border-radius: 8px; object-fit: cover;
             border: 2px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;
@@ -171,9 +187,9 @@ $regNum = $a['registration_number'];
 
         .fee-highlight {
             display: inline-flex; align-items: center; gap: 6px;
-            background: #f0fdf4; padding: 4px 12px; border-radius: 20px;
-            font-size: 12px; font-weight: 600; color: #15803d;
-            border: 1px solid #bbf7d0;
+            background: #eff6ff; padding: 4px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; color: #1e3a8a;
+            border: 1px solid #bfdbfe;
         }
 
         @media print {
